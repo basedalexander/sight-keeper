@@ -18,6 +18,7 @@ function _createClass(target, props) {
 /** Assignment Static class to variable Static */
 var Static = (function () {
   'use strict';
+  console.info('Static module');
 
   function Static(name, defaultValue) {
     this.name = name;
@@ -72,6 +73,7 @@ var Static = (function () {
 */
 var Messenger = (function () {
   'use strict';
+  console.info('Messenger module');
 
   function Messenger(name) {
     /** @type {string} Identificator of instance */
@@ -95,6 +97,7 @@ var Messenger = (function () {
         chrome.runtime.onMessage.addListener(function (message, sender, cb) {
           // Don't do anything since the message was sent from the same messenger
           if (message.src === self.src) return;
+          if (message.name !== name) return;
           // Handle message
           handler(message);
         });
@@ -143,19 +146,17 @@ var appState = new Static('state', 'on');
 
 var session = {
   status: new Static('session.status', 'stopped'),
-  period: new Static('session.period', '60000'), //2700000 45min
+  period: new Static('session.period', '2700000'), //2700000 45min
   startDate: new Static('session.startDate', '0'),
 };
-
-session.status.reset();
-session.startDate.reset();
-
 var idle = {
   status: new Static('idle.status', 'stopped'),
-  period: new Static('idle.period', '30000'), // 300000 5min
+  period: new Static('idle.period', '300000'), // 300000 5min
   startDate: new Static('idle.startDate', '0'),
 };
-
+// Initially reset all statuses and start dates
+session.status.reset();
+session.startDate.reset();
 idle.status.reset();
 idle.startDate.reset();
 
@@ -258,6 +259,25 @@ function idleHandler(idleState) {
     }
   }
 }
+
+function buttonHandler(id, buttonIndex) {
+  // When pressed 'SKIP' button - run session again
+  if (buttonIndex === 0) {
+    chrome.notifications.clear(id, function () {
+      startSession();
+      console.log('idle skipped');
+    });
+  } else {
+    // When pressed 'remind in *' run session with time : '5 minutes'
+    chrome.notifications.clear(id, function () {
+      startSession(0.5 * 60000);
+      console.log('session time set to 30 secs');
+    });
+  }
+  // remove listener after pressing
+  chrome.notifications.onButtonClicked.removeListener(buttonHandler);
+}
+
 
 
 
@@ -410,9 +430,15 @@ function notifEndSession() {
       }]
     };
   chrome.notifications.create(id, options, function (id) {
+    // Adding listener to buttons in notification
+    chrome.notifications.onButtonClicked.addListener(buttonHandler);
+
     setTimeout(function () {
+      // remove button listeners
+      chrome.notifications.onButtonClicked.removeListener(buttonHandler);
+      // then clear notification
       chrome.notifications.clear(id, function () {});
-    }, 25000);
+    }, 15000);
   });
 }
 
@@ -425,7 +451,7 @@ function notifIdleProgress() {
     options = {
       type: 'basic',
       iconUrl: '../img/eyes_tired.jpg',
-      title: 'Idle time left :' + (idle.period.load() - (Date.now() - idle.startDate.load())),
+      title: 'Idle time left :' + ms2min(idle.period.load() - (Date.now() - idle.startDate.load())),
       message: 'Get back to your exercises',
       contextMessage: 'Sight keeper',
       priority: 1,
@@ -435,4 +461,9 @@ function notifIdleProgress() {
       chrome.notifications.clear(id, function () {});
     }, 3000);
   });
+}
+
+/** CONVERTER */
+function ms2min (ms) {
+  return Math.floor(ms / 60000);
 }

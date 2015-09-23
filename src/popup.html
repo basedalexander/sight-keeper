@@ -1,19 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Document</title>
     <style>
     body {
-        width:300px;
-        height:300px;
+        width: 200px;
+        height: 100px;
+    }
+    #controls {
+        float:right;
     }
     </style>
 </head>
-<body>
-    <label for='app'> Sight keeper </label><input id='app' type="checkbox" checked> <br>
 
-    <label for='sounds'>Sounds</label><input id='sounds' type="checkbox" checked> <br>
-   <script src="js/popup.js"></script>
+<body>
+    <div id='controls'>
+        <label for='app'> Sight keeper </label>
+        <input id='app' type="checkbox" checked>
+    </div>
+    <script src="js/popup.js"></script>
 </body>
+
 </html>
