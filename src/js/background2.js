@@ -33,7 +33,13 @@
       startDate: new SK.modules.Static('idle.startDate', '0'),
     };
 
-    // Define modules
+    // Initially reset these values
+    this.session.status.reset();
+    this.session.startDate.reset();
+    this.idle.status.reset();
+    this.idle.startDate.reset();
+
+    // Init modules
 
     this.router = new SK.modules.Router('bg');
 
@@ -41,13 +47,137 @@
 
     SK.modules.converter(this);
 
-    this.notify = new SK.modules.Notify();
+    SK.modules.notify(this);
 
     SK.modules.audio(this);
+
+    // Basic functionality
+    this.turnOn = function () {
+      console.log('app turned on');
+      this.startSession();
+      this.startListenToIdleState();
+      this.enableIcon();
+    };
+
+    this.turnOff = function () {
+      console.log('app turned OFF');
+      this.endSession();
+      this.endIdle();
+      this.notifyClearAll();
+      this.audio.pause();
+      this.stopListenToIdleState();
+      this.state.save('off');
+      this.disableIcon();
+    };
+
+    this.startListenToIdleState = function () {
+      console.log('added idle listener');
+      chrome.idle.setDetectionInterval(15);
+      chrome.idle.onStateChanged.addListener(this.idleHandler);
+    };
+
+    this.stopListenToIdleState = function () {
+      console.log('idle listener removed');
+      chrome.idle.onStateChanged.removeListener(this.idleHandler);
+    };
+
+    this.idleHandler = function (idleState) {
+      console.log(idleState + ' fired');
+      if (idleState === 'idle') {
+        if (this.session.status.load() === 'running') {
+          this.trackAfk();
+        }
+        if (this.session.status.load() === 'stopped' && this.idle.status.load() === 'stopped') {
+          this.startIdle();
+        }
+      }
+
+      if (idleState === 'active') {
+        if (this.session.status.load() === 'running') {
+          this.dontTrackAfk();
+        }
+        if (this.idle.status.load() === 'running') {
+          this.notifIdleProgress();
+        }
+        if (this.idle.status.load() === 'stopped' && this.session.status.load() === 'stopped') {
+          if (this.idleEndNotification) this.idleEndNotification.close();
+          this.startSession();
+        }
+      }
+    };
+
+    this.startSession = function (time) {
+      console.log('session started');
+      var session = this.session,
+          t = time || +session.period.load();
+
+      session.status.save('running');
+
+      session.startDate.save(Date.now());
+
+      session.timerId = setTimeout(function () {
+        this.endSession();
+        this.notifyEndSession();
+      }, t);
+    };
+
+    this.endSession = function () {
+      var session = this.session;
+      console.log('session ended');
+
+      clearTimeout(session.timerId);
+      session.status.reset();
+
+      session.startDate.reset();
+
+      this.dontTrackAfk();
+    };
+
+
+    this.startIdle = function (time) {
+      console.log('idle started');
+
+      var idle = this.idle,
+             t = time || +idle.period.load();
+
+      idle.status.save('running');
+      idle.startDate.save(Date.now());
+
+      idle.timerId = setTimeout(function () {
+        this.endIdle();
+        this.notifEndIdle();
+      }, t);
+    };
+
+    this.endIdle = function () {
+      console.log('idle ended');
+      var idle = this.idle;
+
+      clearTimeout(idle.timerId);
+      idle.status.reset();
+      idle.startDate.reset();
+    };
+
+    this.trackAfk = function () {
+      console.log('tracking AFK...');
+      this.afkId = setTimeout(function () {
+        this.endSession();
+      }, this.idle.period.load());
+    };
+
+    this.dontTrackAfk = function () {
+      console.log('stop tracking AFK');
+      clearTimeout(this.afkId);
+    };
+
+    if (this.state.load() === 'on') {
+      this.turnOn();
+    }  else {
+      this.turnOff();
+    }
   };
 
   SK.modules = {};
-
 
   // Creates an object that has methods for retrieving and
   // setting value in localStorage to given key.
@@ -108,7 +238,6 @@
     // return class
     return Static;
   })();
-
 
   // Creates an object that can:
   //
@@ -184,7 +313,8 @@
     };
   };
 
-  SK.modules.converter = function (app){
+  SK.modules.converter = function (app) {
+    console.info('converter module');
     app.ms2min = function (ms) {
       return Math.floor(ms / 60000);
     };
@@ -194,20 +324,22 @@
     };
   };
 
-  SK.modules.Notify = (function (global) {
+  // Desktop notifications (chrome.notifications API and
+  // web Notifications API)
+  SK.modules.notify = function (app) {
 
     // Dependencies
     var converter = SK.modules.converter;
 
     console.info('Notify module');
 
-    var _idleOptions = {
-        body: 'Now you can get back to work',
-        icon: '../img/eyes_good.png'
-      },
+    app.idleOptions = {
+      body: 'Now you can get back to work',
+      icon: '../img/eyes_good.png'
+    };
 
-      //
-      _idleNotification;
+    //
+    app.idleNotification = null;
 
 
     // Listen to click event on notification's buttons
@@ -232,15 +364,15 @@
       chrome.notifications.onButtonClicked.removeListener(buttonHandler);
     }
 
-    function _sessionEnd() {
+    app.notifySessionEnd = function () {
       var options = {
         type: 'basic',
 
         iconUrl: '../img/eyes_tired2.png',
 
-        title: 'Enough! ' + converter.ms2min(global.session.period.load()) + ' minutes have passed',
+        title: 'Enough! ' + this.ms2min(this.session.period.load()) + ' minutes have passed',
 
-        message: 'Take a ' + converter.ms2min(global.idle.period.load()) + '-minute break',
+        message: 'Take a ' + this.ms2min(this.idle.period.load()) + '-minute break',
 
         contextMessage: 'Sight keeper',
 
@@ -268,55 +400,52 @@
           chrome.notifications.clear(id, function () {});
         }, 15000);
       });
-    }
+    };
 
-    function _idleEnd() {
-      _idleNotification = new Notification('Time to break passed', _idleOptions);
-    }
+    app.notifyIdleEnd = function () {
+      this.idleNotification = new Notification('Time to break passed', this.idleOptions);
+    };
 
-    function _closeIdleEnd() {
-      _idleNotification.close();
-    }
+    app.notifyCloseIdleEnd = function () {
+      if (this.idleNotification) this.idleNotification.close();
+    };
 
-    function _idleProgress() {
+    app.notifyIdleProgress = function () {
       var options = {
         type: 'basic',
 
         iconUrl: '../img/eyes_tired.jpg',
 
-        title: 'Idle time left :' + converter.ms2min(global.idle.period.load() - (Date.now() - global.idle.startDate.load())),
+        title: 'Idle time left :' + this.ms2min(this.idle.period.load() - (Date.now() - this.idle.startDate.load())),
 
         message: 'Your eyes need to rest',
 
         contextMessage: 'Sight keeper',
 
-        priority: 1,
+        priority: 2,
       };
-    }
 
-    function Notify() {
+      chrome.notifications.create('idleProgress', options, function (id) {
+        setTimeout(function () {
+          chrome.notifications.clear(id, function () {});
+        }, 5000);
+      });
+    };
 
-      // Shows notification
-      this.sessionEnd = _sessionEnd;
+    app.notifyClearAll = function () {
+      chrome.notifications.clear('sessionEnd', function () {});
+      chrome.notifications.clear('idleProgress', function () {});
+      this.notifyCloseIdleEnd();
+    };
+  };
 
-      // Show that user have enough rest, uses web Notification API
-      this.idleEnd = _idleEnd;
-
-      // Uses web Notification API
-      this.closeIdleEnd = _closeIdleEnd;
-
-      this.idleProgress = _idleProgress;
-    }
-
-    return Notify;
-  })(SK);
-
+  // Audio notifications
   SK.modules.audio = function (app) {
-    var audio = new Audio('audio/haze.ogg');
-    console.log(document.body);
-    app.audio = audio;
+    console.info('audio module');
+    app.audio = new Audio('audio/haze.ogg');
     document.body.appendChild(app.audio);
   };
+
 
   // Miscellaneous functions
   function _createClass(target, props) {
