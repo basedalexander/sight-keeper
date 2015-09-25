@@ -1,4 +1,3 @@
-;
 (function (window, document) {
   'use strict';
   var SK = function () {
@@ -52,23 +51,6 @@
     SK.modules.audio(this);
 
     // Basic functionality
-    this.turnOn = function () {
-      console.log('app turned on');
-      this.startSession();
-      this.startListenToIdleState();
-      this.enableIcon();
-    };
-
-    this.turnOff = function () {
-      console.log('app turned OFF');
-      this.endSession();
-      this.endIdle();
-      this.notifyClearAll();
-      this.audio.pause();
-      this.stopListenToIdleState();
-      this.state.save('off');
-      this.disableIcon();
-    };
 
     this.startListenToIdleState = function () {
       console.log('added idle listener');
@@ -106,75 +88,96 @@
       }
     };
 
-    this.startSession = function (time) {
-      console.log('session started');
-      var session = this.session,
-          t = time || +session.period.load();
 
-      session.status.save('running');
-
-      session.startDate.save(Date.now());
-
-      session.timerId = setTimeout(function () {
-        this.endSession();
-        this.notifyEndSession();
-      }, t);
-    };
-
-    this.endSession = function () {
-      var session = this.session;
-      console.log('session ended');
-
-      clearTimeout(session.timerId);
-      session.status.reset();
-
-      session.startDate.reset();
-
-      this.dontTrackAfk();
-    };
-
-
-    this.startIdle = function (time) {
-      console.log('idle started');
-
-      var idle = this.idle,
-             t = time || +idle.period.load();
-
-      idle.status.save('running');
-      idle.startDate.save(Date.now());
-
-      idle.timerId = setTimeout(function () {
-        this.endIdle();
-        this.notifEndIdle();
-      }, t);
-    };
-
-    this.endIdle = function () {
-      console.log('idle ended');
-      var idle = this.idle;
-
-      clearTimeout(idle.timerId);
-      idle.status.reset();
-      idle.startDate.reset();
-    };
-
-    this.trackAfk = function () {
-      console.log('tracking AFK...');
-      this.afkId = setTimeout(function () {
-        this.endSession();
-      }, this.idle.period.load());
-    };
-
-    this.dontTrackAfk = function () {
-      console.log('stop tracking AFK');
-      clearTimeout(this.afkId);
-    };
 
     if (this.state.load() === 'on') {
       this.turnOn();
-    }  else {
+    } else {
       this.turnOff();
     }
+  };
+
+  SK.prototype.turnOn = function () {
+    console.log('app turned on');
+    this.startSession();
+    this.startListenToIdleState();
+    this.enableIcon();
+  };
+
+  SK.prototype.turnOff = function () {
+    console.log('app turned OFF');
+    this.endSession();
+    this.endIdle();
+    this.notifyClearAll();
+    this.audio.pause();
+    this.stopListenToIdleState();
+    this.state.save('off');
+    this.disableIcon();
+  };
+
+  SK.prototype.startSession = function (time) {
+
+    var session = this.session,
+        self = this,
+      t = time || +session.period.load();
+
+    session.status.save('running');
+
+    session.startDate.save(Date.now());
+
+    session.timerId = setTimeout(function () {
+      self.endSession();
+      self.notifySessionEnd();
+    }, t);
+  };
+
+  SK.prototype.endSession = function () {
+    var session = this.session;
+    console.log('session ended');
+
+    clearTimeout(session.timerId);
+    session.status.reset();
+
+    session.startDate.reset();
+
+    this.dontTrackAfk();
+  };
+
+
+  SK.prototype.startIdle = function (time) {
+    console.log('idle started');
+
+    var idle = this.idle,
+      t = time || +idle.period.load();
+
+    idle.status.save('running');
+    idle.startDate.save(Date.now());
+
+    idle.timerId = setTimeout(function () {
+      this.endIdle();
+      this.notifEndIdle();
+    }, t);
+  };
+
+  SK.prototype.endIdle = function () {
+    console.log('idle ended');
+    var idle = this.idle;
+
+    clearTimeout(idle.timerId);
+    idle.status.reset();
+    idle.startDate.reset();
+  };
+
+  SK.prototype.trackAfk = function () {
+    console.log('tracking AFK...');
+    this.afkId = setTimeout(function () {
+      this.endSession();
+    }, this.idle.period.load());
+  };
+
+  SK.prototype.dontTrackAfk = function () {
+    console.log('stop tracking AFK');
+    clearTimeout(this.afkId);
   };
 
   SK.modules = {};
