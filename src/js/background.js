@@ -69,7 +69,7 @@
       console.log('session ended');
       var s = this.session;
 
-      // For cases when afk tracker invoces this function (this.trackAfk)
+      // For cases when user was idling (was called this.trackAfk)
       clearTimeout(s.timerId);
       s.timerId = null;
 
@@ -107,6 +107,8 @@
       var idle = this.idle;
 
       clearTimeout(idle.timerId);
+      idle.timerId = null;
+
       idle.status.reset();
       idle.startDate.reset();
 
@@ -116,14 +118,61 @@
 
     this.trackAfk = function () {
       console.log('tracking AFK...');
+
+      var self = this;
+
       this.afkId = setTimeout(function () {
-        this.endSession();
+        self.endSession();
       }, this.idle.period.load());
     };
 
     this.dontTrackAfk = function () {
       console.log('stop tracking AFK');
       clearTimeout(this.afkId);
+      this.afkId = null;
+    };
+
+
+    // Called when app first loaded
+    this.switcher = function () {
+      if (this.state.load() === 'on') {
+        this.switchOn();
+      }
+    };
+
+    this.switchOn = function () {
+      console.log('SK is ON');
+
+      this.startSession();
+      this.startListenToIdleState();
+      this.enableIcon();
+    };
+
+    this.switchOff = function () {
+      console.log('SK is OFF');
+
+      this.endSession();
+      this.endIdle();
+      this.stopListenToIdleState();
+      this.disableIcon();
+      this.stopSound();
+      this.notifyCloseAll();
+    };
+
+    this.startListenToIdleState = function () {
+      console.log('added idle listener');
+      var self = this;
+
+      chrome.idle.setDetectionInterval(15);
+      chrome.idle.onStateChanged.addListener(self.idleStateHandler);
+    };
+
+    this.stopListenToIdleState = function () {
+      console.log('idle listener removed');
+
+      var self = this;
+
+      chrome.idle.onStateChanged.removeListener(self.idleStateHandler);
     };
 
 
