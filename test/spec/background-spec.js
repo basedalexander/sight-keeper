@@ -254,12 +254,19 @@ describe('Notify module', function () {
     expect(typeof SK.notificationIdleEnd).toEqual('undefined');
   });
 
+
+  it('notifyIdlePaused', function () {
+
+  });
+
+
   it('notifyCloseAll()', function () {
     spyOn(SK, 'closeIdleEnd');
 
     SK.notifyCloseAll();
 
     expect(SK.closeIdleEnd).toHaveBeenCalled();
+    expect(chrome.notifications.clear.calls.count()).toEqual(3);
   });
 });
 
@@ -293,6 +300,7 @@ describe('Main functionality', function () {
     };
 
     this.endSession = function () {};
+    this.notifySessionEnd = function () {};
 
     spyOn(this, 'endSession');
     spyOn(this.session.period, 'save');
@@ -301,6 +309,7 @@ describe('Main functionality', function () {
     spyOn(this.session.status, 'load').and.callThrough();
     spyOn(this.session.startDate, 'save');
     spyOn(this.session.startDate, 'load').and.callThrough();
+    spyOn(this, 'notifySessionEnd');
 
     jasmine.clock().install();
 
@@ -313,6 +322,7 @@ describe('Main functionality', function () {
     jasmine.clock().tick(51);
 
     expect(this.endSession).toHaveBeenCalled();
+    expect(this.notifySessionEnd).toHaveBeenCalled();
 
     jasmine.clock().uninstall();
   });
@@ -320,17 +330,64 @@ describe('Main functionality', function () {
 
 
   it('endSession()', function () {
+    this.session = {
+      timerId: 1,
+      status: {
+        reset: function () {},
+      },
+      startDate: {
+        reset: function () {}
+      }
+    };
 
-    spyOn(SK, 'notifySessionEnd');
-    SK.endSession();
+    this.idle = {
+      period: {
+        load: function () {}
+      }
+    };
 
-    expect(SK.session.status.load()).toEqual('stopped');
+    this.afk = {
+      timeoutId: null,
+      startDate: null
+    };
 
-    expect(SK.session.startDate.load()).toEqual('0');
+    this.startIdle = function (time) {};
 
-    expect(SK.session.timerId).toEqual(null);
+    this.dontTrackAfk = function () {};
 
-    expect(SK.notifySessionEnd).toHaveBeenCalled();
+    spyOn(this.session.status, 'reset');
+    spyOn(this.session.startDate, 'reset');
+    spyOn(this, 'dontTrackAfk');
+    spyOn(this, 'startIdle');
+    spyOn(this.idle.period, 'load').and.returnValue(300000);
+
+
+    SK.endSession.call(this);
+
+
+    expect(this.session.timerId).toEqual(null);
+
+    expect(this.session.status.reset).toHaveBeenCalled();
+
+    expect(this.session.startDate.reset).toHaveBeenCalled();
+
+    expect(this.dontTrackAfk).toHaveBeenCalled();
+
+
+
+    this.afk.timeoutId = 1;
+    this.afk.startDate = Date.now() - 30000;
+
+    SK.endSession.call(this);
+
+
+    expect(this.idle.period.load).toHaveBeenCalled();
+
+    expect(this.startIdle).toHaveBeenCalled();
+
+    expect(this.startIdle).toHaveBeenCalledWith(jasmine.any(Number));
+
+    expect(this.dontTrackAfk).toHaveBeenCalled();
   });
 
 
@@ -358,6 +415,7 @@ describe('Main functionality', function () {
     };
 
     this.endIdle = function () {};
+    this.notifyIdleEnd = function () {};
 
 
     spyOn(this, 'endIdle');
@@ -367,6 +425,7 @@ describe('Main functionality', function () {
     spyOn(this.idle.status, 'load').and.callThrough();
     spyOn(this.idle.startDate, 'save');
     spyOn(this.idle.startDate, 'load').and.callThrough();
+    spyOn(this, 'notifyIdleEnd');
 
     jasmine.clock().install();
 
@@ -379,19 +438,86 @@ describe('Main functionality', function () {
     jasmine.clock().tick(51);
 
     expect(this.endIdle).toHaveBeenCalled();
+    expect(this.notifyIdleEnd).toHaveBeenCalled();
 
     jasmine.clock().uninstall();
   });
 
 
   it('endIdle()', function () {
-    SK.endIdle();
 
-    expect(SK.idle.status.load()).toEqual('stopped');
+    this.idle = {
+      timerId: 1,
+      status: {
+        reset: function () {},
+      },
+      startDate: {
+        reset: function () {}
+      }
+    };
 
-    expect(SK.idle.startDate.load()).toEqual('0');
+    this.dontTrackAfk = function () {};
 
-    expect(SK.idle.timerId).toEqual(null);
+    spyOn(this.idle.status, 'reset');
+    spyOn(this.idle.startDate, 'reset');
+
+    SK.endIdle.call(this);
+
+    expect(this.idle.timerId).toEqual(null);
+    expect(this.idle.status.reset).toHaveBeenCalled();
+    expect(this.idle.startDate.reset).toHaveBeenCalled();
+  });
+
+  it('pauseIdle()', function() {
+    var o = {
+      idle: {
+        timeLeft : null,
+
+        status: {
+          save: function () {}
+        },
+
+        period: {
+          load: function () {}
+        },
+
+        startDate: {
+          load: function () {}
+        }
+      },
+
+      notifyIdlePaused: function () {},
+
+      ms2min : function () {}
+    };
+
+    spyOn(o.idle.status, 'save');
+    spyOn(o.idle.period, 'load');
+    spyOn(o.idle.startDate, 'load');
+    spyOn(o, 'notifyIdlePaused');
+    spyOn(o, 'ms2min');
+
+    SK.pauseIdle.call(o);
+
+    expect(o.idle.status.save).toHaveBeenCalled();
+    expect(o.idle.period.load).toHaveBeenCalled();
+    expect(o.idle.startDate.load).toHaveBeenCalled();
+    expect(o.notifyIdlePaused).toHaveBeenCalled();
+  });
+
+
+  it('unpauseIdle()', function() {
+    this.startIdle = function () {};
+    this.idle = {
+      timeLeft : 124
+    };
+
+    spyOn(this, 'startIdle');
+
+    SK.unpauseIdle.call(this);
+
+    expect(this.startIdle).toHaveBeenCalled();
+    expect(this.startIdle).toHaveBeenCalledWith(124);
   });
 
 
@@ -407,11 +533,13 @@ describe('Main functionality', function () {
     };
 
     this.endSession = function () {};
-    this.afkId = null;
+    this.afk = {
+      timeoutId : null
+    };
 
 
     spyOn(this, 'endSession');
-    spyOn(this.idle.period, 'load').and.callThrough();
+    spyOn(this.idle.period, 'load').and.returnValue('50');
 
     // Using jasmine Clock
     // @link http://jasmine.github.io/edge/introduction.html#section-Jasmine_Clock
@@ -419,7 +547,7 @@ describe('Main functionality', function () {
 
     SK.trackAfk.call(this);
 
-    expect(this.afkId).not.toEqual(null);
+    expect(this.afk.timeoutId).not.toEqual(null);
     expect(this.idle.period.load).toHaveBeenCalled();
 
     // Right after period time
@@ -432,10 +560,12 @@ describe('Main functionality', function () {
 
 
   it('dontTrackAfk()', function () {
-    this.afkId = 1;
+    this.afk = {
+      timeoutId : 1
+    };
     SK.dontTrackAfk.call(this);
 
-    expect(this.afkId).toEqual(null);
+    expect(this.afk.timeoutId).toEqual(null);
   });
 
 
@@ -461,6 +591,7 @@ describe('Main functionality', function () {
     expect(this.switchOn).toHaveBeenCalled();
   });
 
+
   it('switchOn()', function () {
     this.startSession = function () {};
     this.startListenToIdleState = function () {};
@@ -477,7 +608,11 @@ describe('Main functionality', function () {
     expect(this.enableIcon).toHaveBeenCalled();
   });
 
+
   it('switchOff()', function () {
+    this.state = {
+      save : function () {}
+    };
     this.endSession = function () {};
     this.endIdle = function () {};
     this.stopListenToIdleState = function () {};
@@ -485,22 +620,28 @@ describe('Main functionality', function () {
     this.stopSound = function () {};
     this.notifyCloseAll = function () {};
 
+    spyOn(this.state, 'save');
     spyOn(this, 'endSession');
     spyOn(this, 'endIdle');
-    spyOn(this, 'stopListenToIdleState');
     spyOn(this, 'disableIcon');
     spyOn(this, 'stopSound');
     spyOn(this, 'notifyCloseAll');
 
     SK.switchOff.call(this);
 
+    expect(this.state.save).toHaveBeenCalled();
+
     expect(this.endSession).toHaveBeenCalled();
+
     expect(this.endIdle).toHaveBeenCalled();
-    expect(this.stopListenToIdleState).toHaveBeenCalled();
+
     expect(this.disableIcon).toHaveBeenCalled();
+
     expect(this.stopSound).toHaveBeenCalled();
+
     expect(this.notifyCloseAll).toHaveBeenCalled();
   });
+
 
   it('startListenToIdleState()', function () {
     this.idleStateHandler = function () {};
@@ -522,26 +663,9 @@ describe('Main functionality', function () {
     expect(chrome.idle.setDetectionInterval).toHaveBeenCalled();
     expect(chrome.idle.setDetectionInterval).toHaveBeenCalledWith(15);
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalled();
-    expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalledWith(this.idleStateHandler);
+    expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalledWith(jasmine.any(Function));
   });
 
-  it('stopListenToIdleState()', function () {
-    this.idleStateHandler = function () {};
-    chrome = {
-      idle: {
-        onStateChanged: {
-          removeListener: function () {}
-        }
-      }
-    };
-
-    spyOn(chrome.idle.onStateChanged, 'removeListener');
-
-    SK.stopListenToIdleState.call(this);
-
-    expect(chrome.idle.onStateChanged.removeListener).toHaveBeenCalled();
-    expect(chrome.idle.onStateChanged.removeListener).toHaveBeenCalledWith(this.idleStateHandler);
-  });
 
 
 });
