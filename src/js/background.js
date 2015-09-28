@@ -54,10 +54,8 @@
     // Basic functionality
 
     // Starts session period
-    this.startSession = function () {
-      console.log('session started');
-
-      var t = +this.session.period.load(),
+    this.startSession = function (time) {
+      var t = time || +this.session.period.load(),
         self = this,
         s = this.session;
 
@@ -67,13 +65,14 @@
 
       s.timerId = setTimeout(function () {
         self.endSession();
+        console.log('session ended');
+
         self.notifySessionEnd();
       }, t);
     };
 
     // It called when session period elapsed
     this.endSession = function () {
-      console.log('session ended');
       var s = this.session;
 
       // For cases when user was idling (was called this.trackAfk)
@@ -90,27 +89,28 @@
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
       if (this.afk.timeoutId) {
+        var t = this.idle.period.load() - (Date.now() - this.afk.startDate);
 
-        var t = Date.now() - this.afk.startDate;
-        if (t < this.idle.period.load()) {
-          console.log('user continuing idle');
-
-          this.startIdle(t);
-        }
         this.dontTrackAfk();
+        console.log('stop tracking AFK by endSession');
+
+        if (t < this.idle.period.load()) {
+          this.startIdle(t);
+          console.log('idle started , period : ' + t);
+        }
+
         return;
       }
       //
       // Just in case if user was afk less than idle.period time.
       // It simple clears afk timerId.
       this.dontTrackAfk();
+      console.log('stop tracking AFK by endSession');
 
     };
 
     // Starts idle period
     this.startIdle = function (time) {
-      console.log('idle started');
-
       var i = this.idle,
         t = time || +i.period.load(),
         self = this;
@@ -120,12 +120,13 @@
 
       i.timerId = setTimeout(function () {
         self.endIdle();
+        console.log('idle ended');
+
         self.notifyIdleEnd();
       }, t);
     };
 
     this.endIdle = function () {
-      console.log('idle ended');
       var idle = this.idle;
 
       clearTimeout(idle.timerId);
@@ -134,7 +135,8 @@
       idle.status.reset();
       idle.startDate.reset();
 
-      this.idle.timeLeft = null;
+      // Delete value due to idle endings
+      idle.timeLeft = null;
     };
 
     // When user interupts idle period -
@@ -149,7 +151,7 @@
       var startDate = this.idle.startDate.load();
 
 
-      this.idle.timeLeft = period - ( now - startDate);
+      this.idle.timeLeft = period - (now - startDate);
 
       this.idle.status.save('paused');
 
@@ -159,26 +161,21 @@
 
     this.unpauseIdle = function () {
       this.startIdle(this.idle.timeLeft);
-      // this.idle.timeLeft = null;
     };
 
     this.trackAfk = function () {
-      console.log('tracking AFK...');
-
       var self = this,
         t = self.idle.period.load();
 
       self.afk.startDate = Date.now();
 
       self.afk.timeoutId = setTimeout(function () {
-        console.log('afk tracker calls endSession()');
-
         self.endSession();
+        console.log('session ended by AFK tracker');
       }, t);
     };
 
     this.dontTrackAfk = function () {
-      console.log('stop tracking AFK');
 
       clearTimeout(this.afk.timeoutId);
 
@@ -197,10 +194,17 @@
     };
 
     this.switchOn = function () {
-      console.log('SK is ON');
+      console.info('switched ON');
 
-      this.startListenToIdleState();
+      this.listenToIdleState();
+      console.log('listening idle state');
+
+      this.listenBtns();
+      console.log('listening buttons');
+
       this.startSession();
+      console.log('session started , period : ' + this.session.period.load());
+
       this.enableIcon();
     };
 
@@ -215,8 +219,8 @@
       this.notifyCloseAll();
     };
 
-    this.startListenToIdleState = function () {
-      console.log('added idle listener');
+    // @link https://developer.chrome.com/extensions/idle
+    this.listenToIdleState = function () {
       var self = this;
 
       chrome.idle.setDetectionInterval(15);
@@ -226,6 +230,7 @@
         var idleStatus = self.idle.status,
           sessionStatus = self.session.status;
 
+        // If app state is 'off' - ignore
         if (self.state.load() === 'off') return;
 
         // Idle state fired!
@@ -235,18 +240,20 @@
           // start countdown certain amount of time, after witch
           // app assumes that user have rested.
           if (sessionStatus.load() === 'running') {
-            console.dir();
             self.trackAfk();
+            console.log('tracking AFK...');
           }
 
           // If session time elapsed and user doesn't do any inputs - start
           // idle period.
           if (sessionStatus.load() === 'stopped' && self.idle.status.load() === 'stopped') {
             self.startIdle();
+            console.log('idle started , period : ' + self.idle.period.load());
           }
 
           if (idleStatus.load() === 'paused') {
             self.unpauseIdle();
+            console.log('idle continued, time left : ' + self.idle.timeLeft);
           }
         }
 
@@ -257,21 +264,49 @@
           // stop countdown afk time.
           if (sessionStatus.load() === 'running') {
             self.dontTrackAfk();
+            console.log('stop tracking AFK');
           }
 
           // If idle period is running and user have made an input -
           // notify user that idle period is not finished yet.
           if (idleStatus.load() === 'running') {
             self.pauseIdle();
+            console.log('idle paused, time left : ' + self.idle.timeLeft);
           }
 
           // If idle period finished and user makes an input -
           // start session period and close desktop notification
           // 'idle finished'.
           if (idleStatus.load() === 'stopped' && sessionStatus.load() === 'stopped') {
-            if (self.idleEndNotification) self.idleEndNotification.close();
+            if (self.idleEndNotification) {
+              self.idleEndNotification.close();
+            }
+
             self.startSession();
+            console.log('session started since did input, period : ' + self.session.period.load());
+
+            self.closeIdleEnd();
           }
+        }
+      });
+    };
+
+    // Handler for chrome.notificaiton's buttons
+    // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
+    this.listenBtns = function () {
+      var self = this;
+      chrome.notifications.onButtonClicked.addListener(function (id, buttonIndex) {
+        chrome.notifications.clear(id, function () {});
+        if (id !== 'sessionEnd') {
+          return;
+        }
+
+        if (buttonIndex === 0) {
+          self.startSession();
+          console.log('session started by skipping idle , period : ' + self.session.period.load());
+        } else {
+          self.startSession(5 * 60000);
+          console.log('session started , reminder, period : 300000' );
         }
       });
     };
@@ -434,23 +469,57 @@
   SK.modules.notify = function (app) {
     console.info('Notify module');
 
+
+
+
     app.notifySessionEnd = function () {
-      var options = {
-        type: 'basic',
-        iconUrl: '../img/eyes_tired2.png',
-        title: 'Enough! ' + this.ms2min(this.session.period.load()) + ' minutes have passed',
-        message: 'Take a ' + this.ms2min(this.idle.period.load()) + '-minute break',
-        contextMessage: 'Sight keeper',
-        priority: 2,
-      };
+      var self = this,
+        options = {
+          type: 'basic',
+          iconUrl: '../img/eyes_tired2.png',
+          title: 'Enough! ' + this.ms2min(this.session.period.load()) + ' minutes have passed',
+          message: 'Take a ' + this.ms2min(this.idle.period.load()) + '-minute break',
+          contextMessage: 'Sight keeper',
+          priority: 2,
+          buttons: [{
+            title: 'SKIP',
+            iconUrl: '../img/ignore_ico.jpg'
+          }, {
+            title: 'Remind in 5 minutes',
+            iconUrl: '../img/remind_ico.jpg'
+          }]
+        };
+
 
       // @link https://developer.chrome.com/apps/notifications#method-create
       chrome.notifications.create('sessionEnd', options, function (id) {
+
+        // TODO: consider to move it into separate function
+        // and handler on initialize phase.
+        // example :
+        // SK.buttonsHandler = function (id, buttonIndex) {...};
+        // chrome.notifications.onButtonClicked.addListener(handler)
+        // var handler = function (id, buttonIndex) {
+        //   chrome.notifications.clear(id, function () {});
+
+        //   if (buttonIndex === 0) {
+        //     self.startSession();
+        //   } else {
+        //     self.startSession(5 * 60000);
+        //     console.log('reming user in 5 minutes');
+        //   }
+        // };
+
+        // Adds handler to notification's buttons
+        // chrome.notifications.onButtonClicked.addListener(handler);
 
         setTimeout(function () {
 
           // @link https://developer.chrome.com/apps/notifications#method-clear
           chrome.notifications.clear(id, function () {});
+
+          // Removes handler from notification's buttons
+          // chrome.notifications.onButtonClicked.removeListener(handler);
         }, 23000);
       });
     };
@@ -468,7 +537,7 @@
     app.closeIdleEnd = function () {
       if (this.notificationIdleEnd) {
         this.notificationIdleEnd.close();
-        delete this.notificationIdleEnd;
+        this.notificationIdleEnd = null;
       }
     };
 
