@@ -269,19 +269,25 @@ describe('Notify module', function () {
   it('notifyIdleEnd()', function () {
     SK.notifyIdleEnd();
 
-    expect(typeof SK.notificationIdleEnd).not.toBe('undefined');
+    expect(SK.notificationIdleEnd).not.toBe(null);
     expect(SK.notificationIdleEnd instanceof Notification).toBe(true);
   });
+
+
 
   it('closeIdleEnd()', function () {
     SK.closeIdleEnd();
 
-    expect(typeof SK.notificationIdleEnd).toEqual('undefined');
+    expect(SK.notificationIdleEnd).toEqual(null);
   });
 
 
   it('notifyIdlePaused', function () {
+    SK.notifyIdlePaused();
 
+    expect(chrome.notifications.create).toHaveBeenCalled();
+
+    expect(chrome.notifications.create).toHaveBeenCalledWith('idlePaused', jasmine.any(Object), jasmine.any(Function) );
   });
 
 
@@ -619,17 +625,26 @@ describe('Main functionality', function () {
 
   it('switchOn()', function () {
     this.startSession = function () {};
-    this.startListenToIdleState = function () {};
+    this.listenToIdleState = function () {};
+    this.listenBtns = function () {};
     this.enableIcon = function () {};
+    this.session = {
+      period: {
+        load: function () {}
+      }
+    };
 
     spyOn(this, 'startSession');
-    spyOn(this, 'startListenToIdleState');
+    spyOn(this, 'listenToIdleState');
+    spyOn(this, 'listenBtns');
     spyOn(this, 'enableIcon');
+    spyOn(this.session.period, 'load');
 
     SK.switchOn.call(this);
 
     expect(this.startSession).toHaveBeenCalled();
-    expect(this.startListenToIdleState).toHaveBeenCalled();
+    expect(this.listenToIdleState).toHaveBeenCalled();
+    expect(this.listenBtns).toHaveBeenCalled();
     expect(this.enableIcon).toHaveBeenCalled();
   });
 
@@ -640,7 +655,7 @@ describe('Main functionality', function () {
     };
     this.endSession = function () {};
     this.endIdle = function () {};
-    this.stopListenToIdleState = function () {};
+    this.stoplistenToIdleState = function () {};
     this.disableIcon = function () {};
     this.stopSound = function () {};
     this.notifyCloseAll = function () {};
@@ -668,7 +683,7 @@ describe('Main functionality', function () {
   });
 
 
-  it('startListenToIdleState()', function () {
+  it('listenToIdleState()', function () {
     this.idleStateHandler = function () {};
     chrome = {
       idle: {
@@ -683,7 +698,7 @@ describe('Main functionality', function () {
     spyOn(chrome.idle, 'setDetectionInterval');
     spyOn(chrome.idle.onStateChanged, 'addListener');
 
-    SK.startListenToIdleState.call(this);
+    SK.listenToIdleState.call(this);
 
     expect(chrome.idle.setDetectionInterval).toHaveBeenCalled();
     expect(chrome.idle.setDetectionInterval).toHaveBeenCalledWith(15);
@@ -691,6 +706,7 @@ describe('Main functionality', function () {
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalledWith(jasmine.any(Function));
   });
 
-
+  it('listenBtns()', function() {
+  });
 
 });
