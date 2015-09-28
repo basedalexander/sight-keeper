@@ -6,13 +6,14 @@ describe('SK background.js', function () {
 
 
   it('SK has all the necessary methods and properties', function () {
-    expect(SK.state).not.toBe('undefined');
+    expect(SK.state).not.toBe(undefined);
 
-    expect(SK.session).not.toBe('undefined');
+    expect(SK.session).not.toBe(undefined);
 
-    expect(SK.idle).not.toBe('undefined');
+    expect(SK.idle).not.toBe(undefined);
 
-    expect(SK.router).not.toBe('undefined');
+    expect(SK.router).not.toBe(undefined);
+
   });
 
 
@@ -33,14 +34,38 @@ describe('SK background.js', function () {
 
 
 describe('Static module', function () {
-  it('load() reset() save()', function () {
-    expect(SK.state.load()).toBe('on');
 
-    expect(SK.state.save('off')).toBe('off');
+  it('reset()', function() {
+    spyOn(SK.state, 'save');
 
-    expect(SK.state.load()).toBe('off');
+    SK.state.reset();
 
-    expect(SK.state.reset()).toBe('on');
+    expect(SK.state.save).toHaveBeenCalled();
+  });
+
+  it('load()', function() {
+    spyOn(window.localStorage, 'getItem').and.returnValues('on', null);
+    spyOn(SK.state, 'reset');
+
+    SK.state.load();
+
+    expect(window.localStorage.getItem).toHaveBeenCalled();
+    expect(SK.state.reset).not.toHaveBeenCalled();
+
+    SK.state.load();
+
+    expect(window.localStorage.getItem).toHaveBeenCalled();
+    expect(SK.state.reset).toHaveBeenCalled();
+  });
+
+  it('save()', function() {
+    spyOn(window.localStorage, 'setItem');
+    spyOn(SK.state , 'load');
+
+    SK.state.save('on');
+
+    expect(window.localStorage.setItem).toHaveBeenCalled();
+    expect(SK.state.load).toHaveBeenCalled();
   });
 });
 
