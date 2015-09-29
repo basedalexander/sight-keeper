@@ -18,6 +18,7 @@
       period: new SK.modules.Static('session.period', '60000'), //2700000 45min
 
       startDate: new SK.modules.Static('session.startDate', '0')
+
     };
 
     this.idle = {
@@ -32,6 +33,13 @@
       startDate: new SK.modules.Static('idle.startDate', '0')
     };
 
+
+    // Idle detection interval for session period in seconds.
+    this.session.idleDetect = this.idle.period.load() * 0.7;
+
+    // Idle detection interval for idle period in seconds.
+    this.idle.idleDetect = 15;
+
     // Object for tracking afk state
     this.afk = {
       timeoutId: null,
@@ -43,6 +51,7 @@
     this.session.startDate.reset();
     this.idle.status.reset();
     this.idle.startDate.reset();
+
 
     // Init modules
     this.router = new SK.modules.Router('bg');
@@ -60,8 +69,10 @@
         s = this.session;
 
       s.status.save('running');
-
       s.startDate.save(Date.now());
+
+      // Set interval for session period
+      chrome.idle.setDetectionInterval(s.idleDetect);
 
       s.timerId = setTimeout(function () {
         self.endSession();
@@ -86,15 +97,15 @@
       // Sets session startDate to default ('0')
       s.startDate.reset();
 
+      // If session period successfully ended
+      chrome.idle.setDetectionInterval(120); // 150
+
       // If session period finished while user is still afk - run idle
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
       if (this.afk.timeoutId) {
         var period = +this.idle.period.load();
         var t = now - this.afk.startDate;
-
-        this.dontTrackAfk();
-        console.log('stop tracking AFK by endSession');
 
         if (t < period) {
           this.startIdle(period - t);
@@ -104,7 +115,6 @@
           console.log('idle started , default period : ' + period);
         }
 
-        return;
       }
       //
       // Just in case if user was afk less than idle.period time.
@@ -121,7 +131,9 @@
         self = this;
 
       i.status.save('running');
-      i.startDate.save(Date.now()); //
+      i.startDate.save(Date.now());
+
+      chrome.idle.setDetectionInterval(this.idle.idleDetect);
 
       i.timerId = setTimeout(function () {
         self.endIdle();
