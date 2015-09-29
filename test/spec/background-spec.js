@@ -349,6 +349,12 @@ describe('Main functionality', function () {
     this.endSession = function () {};
     this.notifySessionEnd = function () {};
 
+    chrome = {
+      idle: {
+        setDetectionInterval : function () {}
+      }
+    };
+
     spyOn(this, 'endSession');
     spyOn(this.session.period, 'save');
     spyOn(this.session.period, 'load').and.callThrough();
@@ -357,6 +363,7 @@ describe('Main functionality', function () {
     spyOn(this.session.startDate, 'save');
     spyOn(this.session.startDate, 'load').and.callThrough();
     spyOn(this, 'notifySessionEnd');
+    spyOn(chrome.idle, 'setDetectionInterval');
 
     jasmine.clock().install();
 
