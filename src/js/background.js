@@ -17,7 +17,7 @@
       // Configurable in popup options
       period: new SK.modules.Static('session.period', '60000'), //2700000 45min
 
-      startDate: new SK.modules.Static('session.startDate', '0'),
+      startDate: new SK.modules.Static('session.startDate', '0')
     };
 
     this.idle = {
@@ -29,7 +29,7 @@
       // Configurable in popup options
       period: new SK.modules.Static('idle.period', '30000'), // 300000 5min
 
-      startDate: new SK.modules.Static('idle.startDate', '0'),
+      startDate: new SK.modules.Static('idle.startDate', '0')
     };
 
     // Object for tracking afk state
@@ -73,7 +73,8 @@
 
     // It called when session period elapsed
     this.endSession = function () {
-      var s = this.session;
+      var s = this.session,
+          now = Date.now();
 
       // For cases when user was idling (was called this.trackAfk)
       clearTimeout(s.timerId);
@@ -89,14 +90,18 @@
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
       if (this.afk.timeoutId) {
-        var t = this.idle.period.load() - (Date.now() - this.afk.startDate);
+        var period = +this.idle.period.load();
+        var t = now - this.afk.startDate;
 
         this.dontTrackAfk();
         console.log('stop tracking AFK by endSession');
 
-        if (t < this.idle.period.load()) {
-          this.startIdle(t);
-          console.log('idle started , period : ' + t);
+        if (t < period) {
+          this.startIdle(period - t);
+          console.log('idle started , custom period : ' + (period - t));
+        } else {
+          this.startIdle();
+          console.log('idle started , default period : ' + period);
         }
 
         return;
@@ -455,6 +460,7 @@
 
   SK.modules.converter = function (app) {
     console.info('converter module');
+
     app.ms2min = function (ms) {
       return +(ms / 60000).toFixed(1);
     };
@@ -462,6 +468,14 @@
     app.min2ms = function (mins) {
       return mins * 60000;
     };
+
+    app.sec2ms = function (sec) {
+      return sec * 1000;
+    };
+
+    app.ms2sec = function (ms) {
+      return ms / 1000;
+    }
   };
 
   // Desktop notifications (chrome.notifications API and
