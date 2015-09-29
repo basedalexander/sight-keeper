@@ -382,7 +382,6 @@ describe('Main functionality', function () {
   });
 
 
-
   it('endSession()', function () {
     this.session = {
       timerId: 1,
@@ -521,6 +520,7 @@ describe('Main functionality', function () {
     expect(this.idle.status.reset).toHaveBeenCalled();
     expect(this.idle.startDate.reset).toHaveBeenCalled();
   });
+
 
   it('pauseIdle()', function() {
     var o = {
@@ -728,6 +728,7 @@ describe('Main functionality', function () {
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalled();
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalledWith(jasmine.any(Function));
   });
+
 
   it('listenBtns()', function() {
   });

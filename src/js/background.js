@@ -320,10 +320,10 @@
 
         if (buttonIndex === 0) {
           self.startSession();
-          console.log('session started by skipping idle , period : ' + self.session.period.load());
+          console.log('session started by skipping idle , period : ' + self.ms2min(self.session.period.load()) + ' min');
         } else {
           self.startSession(5 * 60000);
-          console.log('session started , reminder, period : 300000' );
+          console.log('session started , reminder, period : ' + self.ms2min(5*60000) + ' min' );
         }
       });
     };
@@ -503,8 +503,8 @@
         options = {
           type: 'basic',
           iconUrl: '../img/eyes_tired2.png',
-          title: 'Enough! ' + this.ms2min(this.session.period.load()) + ' minutes have passed',
-          message: 'Take a ' + this.ms2min(this.idle.period.load()) + '-minute break',
+          title: 'You are working ' + this.ms2min(this.session.period.load()) + ' minutes',
+          message: 'Take a break from the monitor' + this.ms2min(this.idle.period.load()) + ' minutes, will remind you in 1 minute if you will ignore this',
           contextMessage: 'Sight keeper',
           priority: 2,
           buttons: [{
