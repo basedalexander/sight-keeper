@@ -187,6 +187,22 @@ describe('Converter module', function () {
 
     expect(SK.min2ms(2.4)).toEqual(144000);
   });
+
+  it('sec2ms', function () {
+    expect(SK.sec2ms(15)).toEqual(15000);
+
+    expect(SK.sec2ms(60)).toEqual(60000);
+
+    expect(SK.sec2ms('120')).toEqual(120000);
+  });
+
+  it('ms2sec',function () {
+    expect(SK.ms2sec(15000)).toEqual(15);
+
+    expect(SK.ms2sec(15357)).toEqual(15.357);
+
+    expect(SK.ms2sec('15357')).toEqual(15.357);
+  });
 });
 
 
