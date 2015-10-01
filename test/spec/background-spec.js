@@ -348,6 +348,7 @@ describe('Main functionality', function () {
 
     this.endSession = function () {};
     this.notifySessionEnd = function () {};
+    this.playSound = function () {};
 
     chrome = {
       idle: {
@@ -386,7 +387,7 @@ describe('Main functionality', function () {
     this.session = {
       timerId: 1,
       status: {
-        reset: function () {},
+        reset: function () {}
       },
       startDate: {
         reset: function () {}
@@ -424,7 +425,7 @@ describe('Main functionality', function () {
 
     expect(this.session.startDate.reset).toHaveBeenCalled();
 
-    expect(this.dontTrackAfk).toHaveBeenCalled();
+    expect(this.dontTrackAfk).not.toHaveBeenCalled();
 
 
 
@@ -469,6 +470,7 @@ describe('Main functionality', function () {
 
     this.endIdle = function () {};
     this.notifyIdleEnd = function () {};
+    this.playSound = function () {};
 
 
     spyOn(this, 'endIdle');
@@ -556,7 +558,6 @@ describe('Main functionality', function () {
     expect(o.idle.status.save).toHaveBeenCalled();
     expect(o.idle.period.load).toHaveBeenCalled();
     expect(o.idle.startDate.load).toHaveBeenCalled();
-    expect(o.notifyIdlePaused).toHaveBeenCalled();
   });
 
 
@@ -590,10 +591,12 @@ describe('Main functionality', function () {
     this.afk = {
       timeoutId : null
     };
+    this.dontTrackAfk = function () {};
 
 
     spyOn(this, 'endSession');
     spyOn(this.idle.period, 'load').and.returnValue('50');
+    spyOn(this, 'dontTrackAfk');
 
     // Using jasmine Clock
     // @link http://jasmine.github.io/edge/introduction.html#section-Jasmine_Clock
@@ -607,6 +610,7 @@ describe('Main functionality', function () {
     // Right after period time
     jasmine.clock().tick(51);
 
+    expect(this.dontTrackAfk).toHaveBeenCalled();
     expect(this.endSession).toHaveBeenCalled();
 
     jasmine.clock().uninstall();
@@ -718,13 +722,10 @@ describe('Main functionality', function () {
       }
     };
 
-    spyOn(chrome.idle, 'setDetectionInterval');
     spyOn(chrome.idle.onStateChanged, 'addListener');
 
     SK.listenToIdleState.call(this);
 
-    expect(chrome.idle.setDetectionInterval).toHaveBeenCalled();
-    expect(chrome.idle.setDetectionInterval).toHaveBeenCalledWith(15);
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalled();
     expect(chrome.idle.onStateChanged.addListener).toHaveBeenCalledWith(jasmine.any(Function));
   });
