@@ -60,6 +60,7 @@
     SK.modules.notify(this);
     SK.modules.audio(this);
 
+
     // Basic functionality
 
     // Starts session period
@@ -179,6 +180,8 @@
     };
 
     this.unpauseIdle = function () {
+
+      // todo is it need yet?
       this.startIdle(this.idle.timeLeft);
     };
 
@@ -205,8 +208,27 @@
     };
 
 
+    //Checks 'state' value  when app has been loaded,
+    // and does things depending on received value.
+    // todo untested
+    this.checkState = function () {
+     var state = this.state.load();
+
+      // If app is on , then run it.
+      if (state === 'on') {
+        this.enableIcon();
+        this.switchOn();
+
+        // If it is 'off' then just change browserAction
+      } else {
+        this.disableIcon();
+        this.switchOff();
+      }
+
+    };
 
     // Called when app first loaded
+    // todo not relevant
     this.switcher = function () {
       if (this.state.load() === 'on') {
         this.switchOn();
@@ -232,6 +254,11 @@
       console.log('SK is OFF');
 
       this.state.save('off');
+
+      if (this.afk.timeoutId) {
+        this.dontTrackAfk();
+      }
+
       this.endSession();
       this.endIdle();
       this.disableIcon();
@@ -351,6 +378,26 @@
       });
     };
 
+    // 'state' listener
+    // todo message listener problem
+
+    this.router.on('state', function (message) {
+      var state;
+      localStorage.setItem(message.name, message.value);
+      console.dir(this);
+      state = localStorage.getItem(message.name);
+
+      if (state === 'on') {
+        SK.switchOn();
+      } else {
+        SK.switchOff();
+      }
+    }
+    );
+
+
+
+    this.checkState();
   };
 
 
@@ -455,6 +502,7 @@
       on: {
         value: function on(name, handler) {
           var self = this;
+            self.handler = handler;
 
           // @link https://developer.chrome.com/extensions/runtime#event-onMessage
           chrome.runtime.onMessage.addListener(function (message, sender, cb) {
@@ -466,7 +514,7 @@
             if (message.name !== name) return;
 
             // Handle message
-            handler(message);
+            self.handler(message);
           });
         }
       }

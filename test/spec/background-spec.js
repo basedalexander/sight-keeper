@@ -209,7 +209,6 @@ describe('Converter module', function () {
 
 
 
-
 describe('Audio module', function () {
 
   beforeEach(function () {
@@ -234,6 +233,7 @@ describe('Audio module', function () {
     expect(SK.audio.getAttribute('src')).toEqual('');
   });
 });
+
 
 
 
@@ -626,8 +626,13 @@ describe('Main functionality', function () {
     expect(this.afk.timeoutId).toEqual(null);
   });
 
+  xit('checkState', function () {
+    // TODO checkState test
+  });
 
-  it('switcher()', function () {
+  xit('switcher()', function () {
+
+    // todo switcher test ?
     this.state = {
       save: function () {},
       load: function () {}
