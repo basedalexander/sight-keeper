@@ -176,9 +176,6 @@
 
       this.idle.status.save('paused');
 
-      // TODO make another notification
-      //this.notifyIdlePaused();
-
     };
 
     this.unpauseIdle = function () {
@@ -298,7 +295,6 @@
           if (idleStatus.load() === 'running') {
             //self.restartIdle();
 
-            // TODO pause idle or restart idle ?
             self.pauseIdle();
             self.notifyIdlePaused();
             self.playSound(2);
