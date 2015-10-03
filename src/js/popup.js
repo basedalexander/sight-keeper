@@ -15,7 +15,7 @@ function send(messageObj, responseCallback) {
 }
 
 var message = {
-  src: 'FRONTEND',
+  id: 'FRONTEND',
   name: 'state',
   value: 'off'
 };

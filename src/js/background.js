@@ -2,6 +2,8 @@
   'use strict';
   var SK = function () {
 
+    var self = this;
+
     // Main state of the application
     // it could be either 'on' or 'off',
     // the user could manage it in popup
@@ -181,7 +183,7 @@
 
     this.unpauseIdle = function () {
 
-      // todo is it need yet?
+      // todo unused function
       this.startIdle(this.idle.timeLeft);
     };
 
@@ -228,7 +230,7 @@
     };
 
     // Called when app first loaded
-    // todo not relevant
+    // todo unsused function
     this.switcher = function () {
       if (this.state.load() === 'on') {
         this.switchOn();
@@ -237,12 +239,6 @@
 
     this.switchOn = function () {
       console.info('switched ON');
-
-      this.listenToIdleState();
-      console.log('listening idle state');
-
-      this.listenBtns();
-      console.log('listening buttons');
 
       this.startSession();
       console.log('session started , period : ' + this.session.period.load());
@@ -382,19 +378,18 @@
     // todo message listener problem
 
     this.router.on('state', function (message) {
-      var state;
       localStorage.setItem(message.name, message.value);
-      console.dir(this);
-      state = localStorage.getItem(message.name);
 
-      if (state === 'on') {
-        SK.switchOn();
-      } else {
-        SK.switchOff();
-      }
+      self.checkState();
     }
     );
 
+
+    this.listenToIdleState();
+    console.log('listening idle state');
+
+    this.listenBtns();
+    console.log('listening buttons');
 
 
     this.checkState();
@@ -502,20 +497,27 @@
       on: {
         value: function on(name, handler) {
           var self = this;
-            self.handler = handler;
+
+            self[name] = function (message, sender, cb) {
+
+              // Don't do anything since the message was sent from the same Router
+              if (message.id === self.id) {
+                console.warn('router id is the same');
+                return;
+              }
+
+              // Message's name is not what we are listening to
+              if (message.name !== name) {
+                console.warn('message name is not expected');
+                return;
+              }
+
+              // Handle message
+              handler(message);
+            };
 
           // @link https://developer.chrome.com/extensions/runtime#event-onMessage
-          chrome.runtime.onMessage.addListener(function (message, sender, cb) {
-
-            // Don't do anything since the message was sent from the same Router
-            if (message.id === self.id) return;
-
-            // Message's name is not what we are listening to
-            if (message.name !== name) return;
-
-            // Handle message
-            self.handler(message);
-          });
+          chrome.runtime.onMessage.addListener(self[name]);
         }
       }
     });
