@@ -498,22 +498,17 @@
         value: function on(name, handler) {
           var self = this;
 
+            // Save handler in router object.
             self[name] = function (message, sender, cb) {
 
-              // Don't do anything since the message was sent from the same Router
-              if (message.id === self.id) {
-                console.warn('router id is the same');
-                return;
+              // If message was send from another Router instance or
+              // message name is not what we expecting then do nothing.
+              if (message.id !== self.id && message.name === name) {
+
+                // Handle message
+                handler(message);
               }
 
-              // Message's name is not what we are listening to
-              if (message.name !== name) {
-                console.warn('message name is not expected');
-                return;
-              }
-
-              // Handle message
-              handler(message);
             };
 
           // @link https://developer.chrome.com/extensions/runtime#event-onMessage
