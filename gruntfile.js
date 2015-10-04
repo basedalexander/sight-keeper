@@ -20,12 +20,23 @@ module.exports = function (grunt) {
         summary: false,
         keepRunner: true
       }
+    },
+    jshint: {
+      all: [
+        'src/**/*ound.js',
+        'spec/*.js'
+      ],
+      options: {
+        jshintrc: '.jshintrc'
+      }
     }
   });
 
   grunt.loadNpmTasks('grunt-contrib-jasmine');
   grunt.loadNpmTasks('grunt-contrib-watch');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
 
   grunt.registerTask('test', ['jasmine']);
+  grunt.registerTask('lint', ['jshint']);
   grunt.registerTask('default', ['test']);
 };
