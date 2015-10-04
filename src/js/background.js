@@ -9,7 +9,6 @@
     // the user could manage it in popup
     this.state = new SK.modules.Static('state', 'on');
 
-
     this.session = {
 
       // Status of session period
@@ -229,18 +228,15 @@
 
     };
 
-    // Called when app first loaded
-    // todo unsused function
-    this.switcher = function () {
-      if (this.state.load() === 'on') {
-        this.switchOn();
-      }
-    };
-
     this.switchOn = function () {
       console.info('switched ON');
 
+      this.addIdleListener();
+
+      this.addBtnListener();
+
       this.startSession();
+
       console.log('session started , period : ' + this.session.period.load());
 
       this.enableIcon();
@@ -256,140 +252,162 @@
       }
 
       this.endSession();
+
       this.endIdle();
+
+      this.rmIdleListener();
+
+      this.rmBtnListener();
+
       this.disableIcon();
+
       this.stopSound();
+
       this.notifyCloseAll();
     };
 
+    // Chrome idle state listener
     // @link https://developer.chrome.com/extensions/idle
-    this.listenToIdleState = function () {
-      var self = this;
+    this.idleListener = function (idleState) {
+      console.log(idleState + ' fired');
 
-      chrome.idle.onStateChanged.addListener(function (idleState) {
-        console.log(idleState + ' fired');
-
-        var idleStatus = self.idle.status,
+      var idleStatus = self.idle.status,
           sessionStatus = self.session.status;
 
-        // If app state is 'off' - ignore
-        if (self.state.load() === 'off') return;
+      // If app state is 'off' - ignore
+      if (self.state.load() === 'off') return;
 
-        // Idle state fired!
-        if (idleState === 'idle') {
+      // Idle state fired!
+      if (idleState === 'idle') {
 
-          // If session is running and user goes afk ,
-          // start countdown certain amount of time, after witch
-          // app assumes that user have rested.
-          if (sessionStatus.load() === 'running') {
-            self.trackAfk();
-            console.log('tracking AFK...');
-          }
-
-          // If session time elapsed and user doesn't do any inputs - start
-          // idle period.
-          if (sessionStatus.load() === 'stopped' && self.idle.status.load() === 'stopped') {
-            self.startIdle();
-            console.log('idle started , period : ' + self.idle.period.load());
-          }
-
-          if (idleStatus.load() === 'paused') {
-
-            self.restartIdle();
-            console.log('idle restarted');
-
-            //self.unpauseIdle();
-            //console.log('idle continued, time left : ' + self.idle.timeLeft);
-          }
+        // If session is running and user goes afk ,
+        // start countdown certain amount of time, after witch
+        // app assumes that user have rested.
+        if (sessionStatus.load() === 'running') {
+          self.trackAfk();
+          console.log('tracking AFK...');
         }
 
-        // Active state fired!
-        if (idleState === 'active') {
-
-          // If user was afk while session was running -
-          // stop countdown afk time.
-          if (sessionStatus.load() === 'running') {
-            self.dontTrackAfk();
-            console.log('stop tracking AFK');
-          }
-
-          // If idle period is running and user have made an input -
-          // notify user that idle period is not finished yet.
-          if (idleStatus.load() === 'running') {
-            //self.restartIdle();
-
-            self.pauseIdle();
-            self.notifyIdlePaused();
-            self.playSound(2);
-
-            console.log('idle paused');
-          }
-
-          // If idle period finished and user makes an input -
-          // start session period and close desktop notification
-          // 'idle finished'.
-          if (idleStatus.load() === 'stopped' && sessionStatus.load() === 'stopped') {
-            if (self.idleEndNotification) {
-              self.idleEndNotification.close();
-            }
-
-            self.startSession();
-            console.log('session started since did input, period : ' + self.session.period.load());
-
-            self.closeIdleEnd();
-          }
+        // If session time elapsed and user doesn't do any inputs - start
+        // idle period.
+        if (sessionStatus.load() === 'stopped' && self.idle.status.load() === 'stopped') {
+          self.startIdle();
+          console.log('idle started , period : ' + self.idle.period.load());
         }
-      });
+
+        if (idleStatus.load() === 'paused') {
+
+          self.restartIdle();
+          console.log('idle restarted');
+
+          //self.unpauseIdle();
+          //console.log('idle continued, time left : ' + self.idle.timeLeft);
+        }
+      }
+
+      // Active state fired!
+      if (idleState === 'active') {
+
+        // If user was afk while session was running -
+        // stop countdown afk time.
+        if (sessionStatus.load() === 'running') {
+          self.dontTrackAfk();
+          console.log('stop tracking AFK');
+        }
+
+        // If idle period is running and user have made an input -
+        // notify user that idle period is not finished yet.
+        if (idleStatus.load() === 'running') {
+          //self.restartIdle();
+
+          self.pauseIdle();
+          self.notifyIdlePaused();
+          self.playSound(2);
+
+          console.log('idle paused');
+        }
+
+        // If idle period finished and user makes an input -
+        // start session period and close desktop notification
+        // 'idle finished'.
+        if (idleStatus.load() === 'stopped' && sessionStatus.load() === 'stopped') {
+          if (self.idleEndNotification) {
+            self.idleEndNotification.close();
+          }
+
+          self.startSession();
+          console.log('session started since did input, period : ' + self.session.period.load());
+
+          self.closeIdleEnd();
+        }
+      }
     };
 
-    // Handler for chrome.notificaiton's buttons
+    this.addIdleListener = function () {
+      chrome.idle.onStateChanged.addListener(self.idleListener);
+
+      console.log('idle listener added');
+    };
+
+    this.rmIdleListener = function () {
+      chrome.idle.onStateChanged.removeListener(self.idleListener);
+
+      console.log('idle listener removed');
+    };
+
+
+    // Chrome notification button's handler
     // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
-    this.listenBtns = function () {
-      var self = this;
-      chrome.notifications.onButtonClicked.addListener(function (id, buttonIndex) {
-        chrome.notifications.clear(id, function () {});
-        if (id === 'sessionEnd') {
+    this.btnListener = function (id, buttonIndex) {
+      chrome.notifications.clear(id, function () {});
+      if (id === 'sessionEnd') {
 
-          if (buttonIndex === 0) {
-            self.startSession();
-            console.log('session started by skipping idle , period : ' + self.ms2min(self.session.period.load()) + ' min');
-          } else {
-            self.startSession(5 * 60000);
-            console.log('session started , reminder, period : ' + self.ms2min(5 * 60000) + ' min');
-          }
+        if (buttonIndex === 0) {
+          self.startSession();
+          console.log('session started by skipping idle , period : ' + self.ms2min(self.session.period.load()) + ' min');
+        } else {
+          self.startSession(5 * 60000);
+          console.log('session started , reminder, period : ' + self.ms2min(5 * 60000) + ' min');
         }
+      }
 
-        if (id === 'idlePaused') {
+      if (id === 'idlePaused') {
 
-          if (buttonIndex === 0) {
+        if (buttonIndex === 0) {
 
-            self.idle.timerId == null;
+          self.idle.timerId == null;
 
-            self.idle.status.reset();
-            self.idle.startDate.reset();
+          self.idle.status.reset();
+          self.idle.startDate.reset();
 
-            self.startSession();
-          }
+          self.startSession();
         }
-      });
+      }
     };
 
-    // 'state' listener
-    // todo message listener problem
+    this.addBtnListener = function () {
+      chrome.notifications.onButtonClicked.addListener(self.btnListener);
 
+      console.log('btn listener added');
+    };
+
+    this.rmBtnListener = function () {
+      chrome.notifications.onButtonClicked.removeListener(self.btnListener);
+
+      console.log('btn listener removed');
+    };
+
+
+    // Listen to change of 'state' value from popup.js
     this.router.on('state', function (message) {
+
+      // Set this value to localStorage
       localStorage.setItem(message.name, message.value);
 
+      // Then execute the main function
       self.checkState();
     }
     );
-
-
-    this.listenToIdleState();
-    console.log('listening idle state');
-
-    this.listenBtns();
-    console.log('listening buttons');
 
 
     this.checkState();
