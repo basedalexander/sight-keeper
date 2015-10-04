@@ -17,7 +17,8 @@ module.exports = function (grunt) {
       src: 'src/**/*ound.js',
       options: {
         specs: 'spec/*.js',
-        summary: false
+        summary: false,
+        keepRunner: true
       }
     }
   });

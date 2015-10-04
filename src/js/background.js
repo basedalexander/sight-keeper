@@ -180,12 +180,6 @@
 
     };
 
-    this.unpauseIdle = function () {
-
-      // todo unused function
-      this.startIdle(this.idle.timeLeft);
-    };
-
     this.trackAfk = function () {
       var self = this,
         t = self.idle.period.load();
@@ -375,7 +369,7 @@
 
         if (buttonIndex === 0) {
 
-          self.idle.timerId == null;
+          self.idle.timerId = null;
 
           self.idle.status.reset();
           self.idle.startDate.reset();
@@ -573,7 +567,7 @@
 
     app.ms2sec = function (ms) {
       return ms / 1000;
-    }
+    };
   };
 
   // Desktop notifications (chrome.notifications API and
@@ -720,3 +714,5 @@
 
   window.SK = new SK();
 })(window, window.document);
+
+console.info('WINDOW IS ' + typeof window);
