@@ -5,3 +5,4 @@ node_modules
 *.txt
 _SpecRunner.html
 .grunt
+*.*~
