@@ -269,7 +269,9 @@
           sessionStatus = self.session.status;
 
       // If app state is 'off' - ignore
-      if (self.state.load() === 'off') return;
+      if (self.state.load() === 'off') {
+        return;
+      }
 
       // Idle state fired!
       if (idleState === 'idle') {
@@ -442,7 +444,7 @@
       // If there are problems - calls reset method.
       load: {
         value: function load() {
-          var value = localStorage.getItem(this.name);
+          var value = window.localStorage.getItem(this.name);
 
           // If value successfuly retrieved - return it
           if (value !== null) {
@@ -459,7 +461,7 @@
       // Sets value and returns it
       save: {
         value: function save(value) {
-          localStorage.setItem(this.name, value);
+          window.localStorage.setItem(this.name, value);
 
           return this.load();
         }
@@ -579,8 +581,7 @@
 
 
     app.notifySessionEnd = function () {
-      var self = this,
-        options = {
+      var options = {
           type: 'basic',
           iconUrl: '../img/eyes_tired2.png',
           title: 'You are working ' + this.ms2min(this.session.period.load()) + ' minutes',
@@ -670,7 +671,7 @@
     // dependency
     var Static = SK.modules.Static;
 
-    app.audio = new Audio('');
+    app.audio = new window.Audio('');
     app.volumeStatic = new Static('volume', '1');
 
     // Play audio file with given index,
