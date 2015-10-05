@@ -5,27 +5,27 @@ describe('SK background.js', function () {
 
 
 
-  //it('SK has all the necessary methods and properties', function () {
-  //  expect(SK.state).not.toBe(undefined);
-  //
-  //  expect(SK.session).not.toBe(undefined);
-  //
-  //  expect(SK.idle).not.toBe(undefined);
-  //
-  //  expect(SK.router).not.toBe(undefined);
-  //
-  //});
-  //
-  //
-  //it('initially reset *.status and *.startDate', function () {
-  //  expect(SK.session.status.load()).toBe('stopped');
-  //
-  //  expect(SK.idle.status.load()).toBe('stopped');
-  //
-  //  expect(SK.session.startDate.load()).toBe('0');
-  //
-  //  expect(SK.idle.startDate.load()).toBe('0');
-  //});
+  it('SK has all the necessary methods and properties', function () {
+    expect(SK.state).not.toBe(undefined);
+
+    expect(SK.session).not.toBe(undefined);
+
+    expect(SK.idle).not.toBe(undefined);
+
+    expect(SK.router).not.toBe(undefined);
+
+  });
+
+
+  it('initially reset *.status and *.startDate', function () {
+    expect(SK.session.status.load()).toBe('stopped');
+
+    expect(SK.idle.status.load()).toBe('stopped');
+
+    expect(SK.session.startDate.load()).toBe('0');
+
+    expect(SK.idle.startDate.load()).toBe('0');
+  });
 });
 
 

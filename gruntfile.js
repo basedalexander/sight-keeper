@@ -4,15 +4,15 @@ module.exports = function (grunt) {
   // });
 
   grunt.initConfig({
-    // watch: {
-    //   scripts: {
-    //     files: ['**/*.js'],
-    //     tasks: ['myTask'],
-    //     options: {
-    //       spawn: false
-    //     }
-    //   }
-    // },
+     watch: {
+       scripts: {
+         files: ['**/*.js'],
+         tasks: ['default'],
+         options: {
+           spawn: false
+         }
+       }
+     },
     jasmine: {
       src: 'src/**/*ound.js',
       options: {

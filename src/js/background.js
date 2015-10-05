@@ -395,18 +395,18 @@
 
 
     // Listen to change of 'state' value from popup.js
-    this.router.on('state', function (message) {
+    //this.router.on('state', function (message) {
+    //
+    //  // Set this value to localStorage
+    //  localStorage.setItem(message.name, message.value);
+    //
+    //  // Then execute the main function
+    //  self.checkState();
+    //}
+    //);
 
-      // Set this value to localStorage
-      localStorage.setItem(message.name, message.value);
 
-      // Then execute the main function
-      self.checkState();
-    }
-    );
-
-
-    this.checkState();
+    //this.checkState();
   };
 
 
@@ -671,7 +671,8 @@
     // dependency
     var Static = SK.modules.Static;
 
-    app.audio = new window.Audio('');
+    // Second case just for headless testing
+    app.audio = window.Audio ? new Audio('') : document.createElement('audio');
     app.volumeStatic = new Static('volume', '1');
 
     // Play audio file with given index,
@@ -715,5 +716,3 @@
 
   window.SK = new SK();
 })(window, window.document);
-
-console.info('WINDOW IS ' + typeof window);
