@@ -16,6 +16,7 @@ module.exports = function (grunt) {
     jasmine: {
       src: 'src/**/*ound.js',
       options: {
+        vendor: 'spec/helpers.js',
         specs: 'spec/*.js',
         summary: false,
         keepRunner: true

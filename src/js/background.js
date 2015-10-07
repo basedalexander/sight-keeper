@@ -452,7 +452,7 @@
           }
 
           // Otherwise reset it to defaultValue
-          console.log("can't obtain the value ", this.name, 'reset to default value');
+          //console.log("can't obtain the value ", this.name, 'reset to default value');
 
           return this.reset();
         }
@@ -671,8 +671,8 @@
     // dependency
     var Static = SK.modules.Static;
 
-    // Second case just for headless testing
-    app.audio = window.Audio ? new Audio('') : document.createElement('audio');
+    // Second case just for headless testing via phantomjs
+    app.audio = new Audio('');
     app.volumeStatic = new Static('volume', '1');
 
     // Play audio file with given index,

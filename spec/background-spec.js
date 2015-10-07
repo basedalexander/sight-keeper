@@ -33,294 +33,273 @@ describe('SK background.js', function () {
 
 
 
-//describe('Static module', function () {
-//
-//  it('reset()', function() {
-//    spyOn(SK.state, 'save');
-//
-//    SK.state.reset();
-//
-//    expect(SK.state.save).toHaveBeenCalled();
-//  });
-//
-//  it('load()', function() {
-//    spyOn(window.localStorage, 'getItem').and.returnValues('on', null);
-//    spyOn(SK.state, 'reset');
-//
-//    SK.state.load();
-//
-//    expect(window.localStorage.getItem).toHaveBeenCalled();
-//    expect(SK.state.reset).not.toHaveBeenCalled();
-//
-//    SK.state.load();
-//
-//    expect(window.localStorage.getItem).toHaveBeenCalled();
-//    expect(SK.state.reset).toHaveBeenCalled();
-//  });
-//
-//  it('save()', function() {
-//    spyOn(window.localStorage, 'setItem');
-//    spyOn(SK.state , 'load');
-//
-//    SK.state.save('on');
-//
-//    expect(window.localStorage.setItem).toHaveBeenCalled();
-//    expect(SK.state.load).toHaveBeenCalled();
-//  });
-//});
-//
-//
-//
-//
-//
-//
-//describe('Router module', function () {
-//
-//  beforeEach(function () {
-//    chrome = {
-//      runtime: {
-//        sendMessage: function () {},
-//
-//        onMessage: {
-//          addListener: function () {}
-//        }
-//      }
-//    };
-//
-//    router = {
-//      onHandler: function () {}
-//    };
-//
-//    spyOn(chrome.runtime, 'sendMessage');
-//
-//    spyOn(chrome.runtime.onMessage, 'addListener');
-//
-//    spyOn(router, 'onHandler');
-//
-//    SK.router.send('state', 'off', function () {});
-//
-//    SK.router.on('state', router.onHandler);
-//  });
-//
-//
-//  it('router.send()', function () {
-//
-//    expect(chrome.runtime.sendMessage).toHaveBeenCalled();
-//
-//    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(jasmine.objectContaining({
-//      id: 'bg',
-//      name: 'state',
-//      value: 'off'
-//    }), jasmine.any(Function));
-//  });
-//
-//
-//  it('router.on()', function () {
-//    expect(chrome.runtime.onMessage.addListener).toHaveBeenCalled();
-//
-//    expect(chrome.runtime.onMessage.addListener).toHaveBeenCalledWith(jasmine.any(Function));
-//  });
-//});
-//
-//
-//
-//
-//
-//
-//describe('Badger module', function () {
-//  beforeEach(function () {
-//    chrome = {
-//      browserAction: {
-//        setIcon: function () {}
-//      }
-//    };
-//
-//    spyOn(chrome.browserAction, 'setIcon');
-//
-//    SK.enableIcon();
-//    SK.disableIcon();
-//  });
-//
-//  it('enableIcon()', function () {
-//    expect(chrome.browserAction.setIcon.calls.count()).toEqual(2);
-//
-//    expect(chrome.browserAction.setIcon.calls.argsFor(0)).toEqual([
-//      jasmine.objectContaining({
-//        path: '../img/popup-icon-on-19.png'
-//      }),
-//      jasmine.any(Function)
-//    ]);
-//  });
-//
-//  it('disableIcon()', function () {
-//    expect(chrome.browserAction.setIcon.calls.count()).toEqual(2);
-//
-//    expect(chrome.browserAction.setIcon.calls.argsFor(1)).toEqual([
-//      jasmine.objectContaining({
-//        path: '../img/popup-icon-off-19.png'
-//      }),
-//      jasmine.any(Function)
-//    ]);
-//  });
-//});
-//
-//
-//
-//
-//
-//
-//describe('Converter module', function () {
-//  it('ms2min', function () {
-//    expect(SK.ms2min(60000)).toEqual(1.0);
-//
-//    expect(SK.ms2min('60000')).toEqual(1.0);
-//
-//    expect(SK.ms2min(90000)).toEqual(1.5);
-//
-//    expect(SK.ms2min(937582)).toEqual(15.6);
-//  });
-//
-//  it('min2ms', function () {
-//    expect(SK.min2ms(2)).toEqual(120000);
-//
-//    expect(SK.min2ms('2')).toEqual(120000);
-//
-//    expect(SK.min2ms(2.4)).toEqual(144000);
-//  });
-//
-//  it('sec2ms', function () {
-//    expect(SK.sec2ms(15)).toEqual(15000);
-//
-//    expect(SK.sec2ms(60)).toEqual(60000);
-//
-//    expect(SK.sec2ms('120')).toEqual(120000);
-//  });
-//
-//  it('ms2sec',function () {
-//    expect(SK.ms2sec(15000)).toEqual(15);
-//
-//    expect(SK.ms2sec(15357)).toEqual(15.357);
-//
-//    expect(SK.ms2sec('15357')).toEqual(15.357);
-//  });
-//});
-//
-//
-//
-//
-//
-//describe('Audio module', function () {
-//
-//  beforeEach(function () {
-//    spyOn(SK.audio, 'play');
-//
-//    SK.volumeStatic.reset();
-//  });
-//
-//  it('playSound()', function () {
-//    SK.playSound(1);
-//
-//    expect(SK.audio.getAttribute('src')).toEqual('audio/1.ogg');
-//
-//    expect(SK.audio.play).toHaveBeenCalled();
-//
-//    expect(SK.audio.volume).toBe(1);
-//  });
-//
-//  it('stopSound()', function () {
-//    SK.stopSound();
-//
-//    expect(SK.audio.getAttribute('src')).toEqual('');
-//  });
-//});
-//
-//
-//
-//
-//
-//describe('Notify module', function () {
-//  beforeEach(function () {
-//    chrome = {
-//      notifications: {
-//        create: function () {},
-//
-//        clear: function () {},
-//
-//        onButtonClicked: {
-//          addListener: function () {},
-//
-//          removeListener: function () {}
-//        },
-//        onClicked: {
-//          addListener: function () {},
-//
-//          removeListener: function () {}
-//        }
-//      }
-//    };
-//
-//
-//    spyOn(chrome.notifications, 'create');
-//
-//    spyOn(chrome.notifications, 'clear');
-//
-//    spyOn(chrome.notifications.onButtonClicked, 'addListener');
-//
-//    spyOn(chrome.notifications.onButtonClicked, 'removeListener');
-//
-//    spyOn(chrome.notifications.onClicked, 'addListener');
-//  });
-//
-//
-//
-//  it('notifySessionEnd()', function () {
-//    SK.notifySessionEnd();
-//
-//    expect(chrome.notifications.create).toHaveBeenCalled();
-//    expect(chrome.notifications.create).toHaveBeenCalledWith('sessionEnd', jasmine.any(Object), jasmine.any(Function));
-//  });
-//
-//
-//
-//  it('notifyIdleEnd()', function () {
-//    SK.notifyIdleEnd();
-//
-//    expect(SK.notificationIdleEnd).not.toBe(null);
-//    expect(SK.notificationIdleEnd instanceof Notification).toBe(true);
-//  });
-//
-//
-//
-//  it('closeIdleEnd()', function () {
-//    SK.closeIdleEnd();
-//
-//    expect(SK.notificationIdleEnd).toEqual(null);
-//  });
-//
-//
-//  it('notifyIdlePaused', function () {
-//    SK.notifyIdlePaused();
-//
-//    expect(chrome.notifications.create).toHaveBeenCalled();
-//
-//    expect(chrome.notifications.create).toHaveBeenCalledWith('idlePaused', jasmine.any(Object), jasmine.any(Function) );
-//  });
-//
-//
-//  it('notifyCloseAll()', function () {
-//    spyOn(SK, 'closeIdleEnd');
-//
-//    SK.notifyCloseAll();
-//
-//    expect(SK.closeIdleEnd).toHaveBeenCalled();
-//    expect(chrome.notifications.clear.calls.count()).toEqual(3);
-//  });
-//});
-//
-//
-//
-//
-//
+describe('Static module', function () {
+
+  it('reset()', function() {
+    spyOn(SK.state, 'save');
+
+    SK.state.reset();
+
+    expect(SK.state.save).toHaveBeenCalled();
+  });
+
+  it('load()', function() {
+    spyOn(window.localStorage, 'getItem').and.returnValues('on', null);
+    spyOn(SK.state, 'reset');
+
+    SK.state.load();
+
+    expect(window.localStorage.getItem).toHaveBeenCalled();
+    expect(SK.state.reset).not.toHaveBeenCalled();
+
+    SK.state.load();
+
+    expect(window.localStorage.getItem).toHaveBeenCalled();
+    expect(SK.state.reset).toHaveBeenCalled();
+  });
+
+  it('save()', function() {
+    spyOn(window.localStorage, 'setItem');
+    spyOn(SK.state , 'load');
+
+    SK.state.save('on');
+
+    expect(window.localStorage.setItem).toHaveBeenCalled();
+    expect(SK.state.load).toHaveBeenCalled();
+  });
+});
+
+
+
+
+
+
+describe('Router module', function () {
+
+  beforeEach(function () {
+
+    spyOn(chrome.runtime, 'sendMessage');
+
+    spyOn(chrome.runtime.onMessage, 'addListener');
+
+
+    SK.router.send('state', 'off', function () {});
+
+    //SK.router.on('state', router.onHandler);
+  });
+
+
+  it('router.send()', function () {
+
+    expect(chrome.runtime.sendMessage).toHaveBeenCalled();
+
+    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith(jasmine.objectContaining({
+      id: 'bg',
+      name: 'state',
+      value: 'off'
+    }), jasmine.any(Function));
+  });
+
+// todo test router.on ???
+  xit('router.on()', function () {
+    expect(chrome.runtime.onMessage.addListener).toHaveBeenCalled();
+
+    expect(chrome.runtime.onMessage.addListener).toHaveBeenCalledWith(jasmine.any(Function));
+  });
+});
+
+
+
+
+
+
+describe('Badger module', function () {
+  beforeEach(function () {
+    chrome = {
+      browserAction: {
+        setIcon: function () {}
+      }
+    };
+
+    spyOn(chrome.browserAction, 'setIcon');
+
+    SK.enableIcon();
+    SK.disableIcon();
+  });
+
+  it('enableIcon()', function () {
+    expect(chrome.browserAction.setIcon.calls.count()).toEqual(2);
+
+    expect(chrome.browserAction.setIcon.calls.argsFor(0)).toEqual([
+      jasmine.objectContaining({
+        path: '../img/popup-icon-on-19.png'
+      }),
+      jasmine.any(Function)
+    ]);
+  });
+
+  it('disableIcon()', function () {
+    expect(chrome.browserAction.setIcon.calls.count()).toEqual(2);
+
+    expect(chrome.browserAction.setIcon.calls.argsFor(1)).toEqual([
+      jasmine.objectContaining({
+        path: '../img/popup-icon-off-19.png'
+      }),
+      jasmine.any(Function)
+    ]);
+  });
+});
+
+
+
+
+
+
+describe('Converter module', function () {
+  it('ms2min', function () {
+    expect(SK.ms2min(60000)).toEqual(1.0);
+
+    expect(SK.ms2min('60000')).toEqual(1.0);
+
+    expect(SK.ms2min(90000)).toEqual(1.5);
+
+    expect(SK.ms2min(937582)).toEqual(15.6);
+  });
+
+  it('min2ms', function () {
+    expect(SK.min2ms(2)).toEqual(120000);
+
+    expect(SK.min2ms('2')).toEqual(120000);
+
+    expect(SK.min2ms(2.4)).toEqual(144000);
+  });
+
+  it('sec2ms', function () {
+    expect(SK.sec2ms(15)).toEqual(15000);
+
+    expect(SK.sec2ms(60)).toEqual(60000);
+
+    expect(SK.sec2ms('120')).toEqual(120000);
+  });
+
+  it('ms2sec',function () {
+    expect(SK.ms2sec(15000)).toEqual(15);
+
+    expect(SK.ms2sec(15357)).toEqual(15.357);
+
+    expect(SK.ms2sec('15357')).toEqual(15.357);
+  });
+});
+
+
+
+
+
+
+describe('Notify module', function () {
+  beforeEach(function () {
+
+    //spyOn(chrome.notifications, 'create');
+    //
+    //spyOn(chrome.notifications, 'clear');
+    //
+    //spyOn(chrome.notifications.onButtonClicked, 'addListener');
+    //
+    //spyOn(chrome.notifications.onButtonClicked, 'removeListener');
+    //
+    //spyOn(chrome.notifications.onClicked, 'addListener');
+  });
+
+
+
+  it('notifySessionEnd()', function () {
+    //spyOn(chrome.notifications, 'create');
+
+    SK.notifySessionEnd();
+
+    expect(chrome.notifications.create).toHaveBeenCalled();
+    expect(chrome.notifications.create).toHaveBeenCalledWith('sessionEnd', jasmine.any(Object), jasmine.any(Function));
+  });
+
+
+
+  xit('notifyIdleEnd()', function () {
+    SK.notifyIdleEnd();
+
+    expect(SK.notificationIdleEnd).not.toBe(null);
+    expect(SK.notificationIdleEnd instanceof Notification).toBe(true);
+  });
+
+
+
+  xit('closeIdleEnd()', function () {
+    SK.closeIdleEnd();
+
+    expect(SK.notificationIdleEnd).toEqual(null);
+  });
+
+
+  xit('notifyIdlePaused', function () {
+    SK.notifyIdlePaused();
+
+    expect(chrome.notifications.create).toHaveBeenCalled();
+
+    expect(chrome.notifications.create).toHaveBeenCalledWith('idlePaused', jasmine.any(Object), jasmine.any(Function) );
+  });
+
+
+  xit('notifyCloseAll()', function () {
+    spyOn(SK, 'closeIdleEnd');
+
+    SK.notifyCloseAll();
+
+    expect(SK.closeIdleEnd).toHaveBeenCalled();
+    expect(chrome.notifications.clear.calls.count()).toEqual(3);
+  });
+});
+
+
+
+
+
+
+describe('Audio module', function () {
+
+  beforeEach(function () {
+    spyOn(SK.audio, 'play');
+
+    SK.volumeStatic.reset();
+  });
+
+  it('playSound()', function () {
+
+    spyOn(SK.volumeStatic, 'load').and.returnValue('1');
+    SK.playSound(1);
+
+    expect(SK.audio.src).toEqual('audio/1.ogg');
+
+    expect(SK.audio.play).toHaveBeenCalled();
+
+    expect(SK.audio.volume).toBe('1');
+  });
+
+  it('stopSound()', function () {
+    SK.stopSound();
+
+    expect(SK.audio.src).toEqual('');
+  });
+});
+
+
+
+
+
+
+
+
+
+
+
 //describe('Main functionality', function () {
 //  it('startSession()', function () {
 //
