@@ -7,9 +7,9 @@
     // Main state of the application
     // it could be either 'on' or 'off',
     // the user could manage it in popup
-    this.state = new SK.modules.Static('state', 'on');
+    var state = new SK.modules.Static('state', 'on');
 
-    this.session = {
+    var session = {
 
       // Status of session period
       // it could be 'running' and 'stopped'
@@ -18,11 +18,14 @@
       // Configurable in popup options
       period: new SK.modules.Static('session.period', '60000'), //2700000 45min
 
-      startDate: new SK.modules.Static('session.startDate', '0')
+      startDate: new SK.modules.Static('session.startDate', '0'),
+
+      // Idle detection interval for session period in seconds.
+      idleDetect: 160
 
     };
 
-    this.idle = {
+    var idle = {
 
       // Status of idle period
       // it could be 'running' and 'stopped'
@@ -31,27 +34,24 @@
       // Configurable in popup options
       period: new SK.modules.Static('idle.period', '30000'), // 300000 5min
 
-      startDate: new SK.modules.Static('idle.startDate', '0')
+      startDate: new SK.modules.Static('idle.startDate', '0'),
+
+      // Idle detection interval for idle period in seconds.
+      idleDetect: 15
     };
 
 
-    // Idle detection interval for session period in seconds.
-    this.session.idleDetect = 160;
-
-    // Idle detection interval for idle period in seconds.
-    this.idle.idleDetect = 15;
-
     // Object for tracking afk state
-    this.afk = {
+    var afk = {
       timeoutId: null,
       startDate: null
     };
 
     // Initially reset these values
-    this.session.status.reset();
-    this.session.startDate.reset();
-    this.idle.status.reset();
-    this.idle.startDate.reset();
+    session.status.reset();
+    session.startDate.reset();
+    idle.status.reset();
+    idle.startDate.reset();
 
 
     // Init modules
@@ -66,16 +66,16 @@
 
     // Starts session period
     this.startSession = function (time) {
-      var t = time || +this.session.period.load(),
+      var t = time || +session.period.load(),
         self = this;
 
-      self.session.status.save('running');
-      self.session.startDate.save(Date.now());
+      session.status.save('running');
+      session.startDate.save(Date.now());
 
       // Set interval for session period
-      chrome.idle.setDetectionInterval(self.session.idleDetect);
+      chrome.idle.setDetectionInterval(session.idleDetect);
 
-      self.session.timerId = setTimeout(function () {
+      session.timerId = setTimeout(function () {
         self.endSession();
         console.log('session ended');
 
@@ -86,18 +86,19 @@
 
     // It called when session period elapsed
     this.endSession = function () {
-      var s = this.session,
-          now = Date.now();
+      var now = Date.now(),
+        idlePeriod,
+        t;
 
       // For cases when user was idling (was called this.trackAfk)
-      clearTimeout(s.timerId);
-      s.timerId = null;
+      clearTimeout(session.timerId);
+      session.timerId = null;
 
       // Sets session status to default ('stopped')
-      s.status.reset();
+      session.status.reset();
 
       // Sets session startDate to default ('0')
-      s.startDate.reset();
+      session.startDate.reset();
 
       // If session period successfully ended
       chrome.idle.setDetectionInterval(60); // 150
@@ -105,16 +106,18 @@
       // If session period finished while user is still afk - run idle
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
-      if (this.afk.timeoutId) {
-        var period = +this.idle.period.load();
-        var t = now - this.afk.startDate;
+      if (afk.timeoutId) {
+        idlePeriod = +idle.period.load();
+
+        // Define how long user was afk
+        t = now - afk.startDate;
+
+        // And start idle immediately but not full idlePeriod
+        this.startIdle(idlePeriod - t);
+        console.log('idle started , custom period : ' + (idlePeriod - t));
 
 
-        this.startIdle(period - t);
-        console.log('idle started , custom period : ' + (period - t));
-
-
-        // It simple clears afk timerId.
+        // Clear afk timerId
         this.dontTrackAfk();
         console.log('stop tracking AFK by endSession');
       }
@@ -122,16 +125,15 @@
 
     // Starts idle period
     this.startIdle = function (time) {
-      var i = this.idle,
-        t = time || +i.period.load(),
+      var t = time || +idle.period.load(),
         self = this;
 
-      i.status.save('running');
-      i.startDate.save(Date.now());
+      idle.status.save('running');
+      idle.startDate.save(Date.now());
 
-      chrome.idle.setDetectionInterval(this.idle.idleDetect);
+      chrome.idle.setDetectionInterval(idle.idleDetect);
 
-      i.timerId = setTimeout(function () {
+      idle.timerId = setTimeout(function () {
         self.endIdle();
         console.log('idle ended');
 
@@ -142,7 +144,6 @@
     };
 
     this.endIdle = function () {
-      var idle = this.idle;
 
       clearTimeout(idle.timerId);
       idle.timerId = null;
@@ -155,9 +156,8 @@
     };
 
     this.restartIdle = function () {
-      var i = this.idle;
 
-      clearTimeout(i.timerId);
+      clearTimeout(idle.timerId);
 
       this.startIdle();
     };
@@ -165,41 +165,44 @@
     // When user interupts idle period -
     // pause idle and notify user that period isn't finished yet.
     this.pauseIdle = function () {
+      var idlePeriod = idle.timeLeft || idle.period.load(),
 
-      clearTimeout(this.idle.timerId);
-      this.idle.timerId = null;
+        now = Date.now(),
 
-      var period = this.idle.timeLeft || this.idle.period.load();
-      var now = Date.now();
-      var startDate = this.idle.startDate.load();
+        idleStartDate = idle.startDate.load();
 
+      clearTimeout(idle.timerId);
+      idle.timerId = null;
 
-      this.idle.timeLeft = period - (now - startDate);
+      // Define how much time left
+      idle.timeLeft = idlePeriod - (now - idleStartDate);
 
-      this.idle.status.save('paused');
+      idle.status.save('paused');
 
     };
 
     this.trackAfk = function () {
       var self = this,
-        t = self.idle.period.load();
+        t = idle.period.load();
 
-      self.afk.startDate = Date.now();
+      afk.startDate = Date.now();
 
-      self.afk.timeoutId = setTimeout(function () {
+      afk.timeoutId = setTimeout(function () {
         self.dontTrackAfk();
+
         self.endSession();
+
         console.log('session ended by AFK tracker');
       }, t);
     };
 
     this.dontTrackAfk = function () {
 
-      clearTimeout(this.afk.timeoutId);
+      clearTimeout(afk.timeoutId);
 
-      this.afk.timeoutId = null;
+      afk.timeoutId = null;
 
-      this.afk.startDate = null;
+      afk.startDate = null;
     };
 
 
@@ -207,15 +210,16 @@
     // and does things depending on received value.
     // todo untested
     this.checkState = function () {
-     var state = this.state.load();
+      var state = state.load();
 
       // If app is on , then run it.
       if (state === 'on') {
         this.enableIcon();
         this.switchOn();
 
-        // If it is 'off' then just change browserAction
       } else {
+
+        // If it is 'off' then just change browserAction
         this.disableIcon();
         this.switchOff();
       }
@@ -231,7 +235,7 @@
 
       this.startSession();
 
-      console.log('session started , period : ' + this.session.period.load());
+      console.log('session started , period : ' + session.period.load());
 
       this.enableIcon();
     };
@@ -239,9 +243,9 @@
     this.switchOff = function () {
       console.log('SK is OFF');
 
-      this.state.save('off');
+      state.save('off');
 
-      if (this.afk.timeoutId) {
+      if (afk.timeoutId) {
         this.dontTrackAfk();
       }
 
@@ -260,13 +264,20 @@
       this.notifyCloseAll();
     };
 
+
+
+
+
+
+
+
     // Chrome idle state listener
     // @link https://developer.chrome.com/extensions/idle
     this.idleListener = function (idleState) {
       console.log(idleState + ' fired');
 
       var idleStatus = self.idle.status,
-          sessionStatus = self.session.status;
+        sessionStatus = self.session.status;
 
       // If app state is 'off' - ignore
       if (self.state.load() === 'off') {
@@ -488,48 +499,81 @@
       this.id = id;
     }
 
-    _createClass(Router, {
+    // _createClass(Router, {
 
-      // Sends the message throughout the extention
-      send: {
-        value: function send(name, value, cb) {
+    //   // Sends the message throughout the extention
+    //   send: {
+    //     value: function send(name, value, cb) {
 
-          // @link https://developer.chrome.com/extensions/runtime#method-sendMessage
-          chrome.runtime.sendMessage({
-              id: this.id,
+    //       // @link https://developer.chrome.com/extensions/runtime#method-sendMessage
+    //       chrome.runtime.sendMessage({
+    //           id: this.id,
 
-              name: name,
+    //           name: name,
 
-              value: value
-            },
-            cb);
+    //           value: value
+    //         },
+    //         cb);
+    //     }
+    //   },
+
+    //   // Adds listener for particular message that was
+    //   // sent from anotherscript within the extention
+    //   on: {
+    //     value: function on(name, handler) {
+    //       var self = this;
+
+    //       // Save handler in router object.
+    //       self[name] = function (message, sender, cb) {
+
+    //         // If message was send from another Router instance or
+    //         // message name is not what we expecting then do nothing.
+    //         if (message.id !== self.id && message.name === name) {
+
+    //           // Handle message
+    //           handler(message);
+    //         }
+
+    //       };
+
+    //       // @link https://developer.chrome.com/extensions/runtime#event-onMessage
+    //       chrome.runtime.onMessage.addListener(self[name]);
+    //     }
+    //   }
+    // });
+
+    Router.prototype.send = function send(name, value, cb) {
+
+      // @link https://developer.chrome.com/extensions/runtime#method-sendMessage
+      chrome.runtime.sendMessage({
+          id: this.id,
+
+          name: name,
+
+          value: value
+        },
+        cb);
+    };
+
+    Router.prototype.on = function (name, handler) {
+      var self = this;
+
+      // Save handler in router object.
+      self[name] = function (message, sender, cb) {
+
+        // If message was send from another Router instance or
+        // message name is not what we expecting then do nothing.
+        if (message.id !== self.id && message.name === name) {
+
+          // Handle message
+          handler(message);
         }
-      },
 
-      // Adds listener for particular message that was
-      // sent from anotherscript within the extention
-      on: {
-        value: function on(name, handler) {
-          var self = this;
+      };
 
-            // Save handler in router object.
-            self[name] = function (message, sender, cb) {
-
-              // If message was send from another Router instance or
-              // message name is not what we expecting then do nothing.
-              if (message.id !== self.id && message.name === name) {
-
-                // Handle message
-                handler(message);
-              }
-
-            };
-
-          // @link https://developer.chrome.com/extensions/runtime#event-onMessage
-          chrome.runtime.onMessage.addListener(self[name]);
-        }
-      }
-    });
+      // @link https://developer.chrome.com/extensions/runtime#event-onMessage
+      chrome.runtime.onMessage.addListener(self[name]);
+    };
 
     // return class
     return Router;
@@ -582,20 +626,20 @@
 
     app.notifySessionEnd = function () {
       var options = {
-          type: 'basic',
-          iconUrl: '../img/eyes_tired2.png',
-          title: 'You are working ' + this.ms2min(this.session.period.load()) + ' minutes',
-          message: 'Take a break from the monitor' + this.ms2min(this.idle.period.load()) + ' minutes, will remind you in 1 minute if you will ignore this',
-          contextMessage: 'Sight keeper',
-          priority: 2,
-          buttons: [{
-            title: 'SKIP',
-            iconUrl: '../img/ignore_ico.jpg'
-          }, {
-            title: 'Remind in 5 minutes',
-            iconUrl: '../img/remind_ico.jpg'
-          }]
-        };
+        type: 'basic',
+        iconUrl: '../img/eyes_tired2.png',
+        title: 'You are working ' + this.ms2min(this.session.period.load()) + ' minutes',
+        message: 'Take a break from the monitor' + this.ms2min(this.idle.period.load()) + ' minutes, will remind you in 1 minute if you will ignore this',
+        contextMessage: 'Sight keeper',
+        priority: 2,
+        buttons: [{
+          title: 'SKIP',
+          iconUrl: '../img/ignore_ico.jpg'
+        }, {
+          title: 'Remind in 5 minutes',
+          iconUrl: '../img/remind_ico.jpg'
+        }]
+      };
 
 
       // @link https://developer.chrome.com/apps/notifications#method-create
