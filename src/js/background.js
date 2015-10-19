@@ -66,7 +66,9 @@
 
     // Starts session period
     function startSession (time) {
-      var t = time || +session.period.load();
+      var t = time || +session.period.load(),
+        period = utils.ms2min(t),
+        idle = utils.ms2min(idle.period.load());
 
       session.status.save('running');
       session.startDate.save(Date.now());
@@ -78,7 +80,7 @@
         endSession();
         console.log('session ended');
 
-        notify.sessionEnded();
+        notify.sessionEnded(period, idle);
         audio.play(1);
       }, t);
     }
@@ -549,16 +551,15 @@
     console.info('Notify module');
 
     var notifIldeInded;
-      // utils = new SK.modules.Utils;
 
 
-    function sessionEnded () {
+    function sessionEnded (period, idle) {
       var options = {
         type: 'basic',
         iconUrl: '../img/eyes_tired2.png',
-        title: 'You are working N minutes',
-        message: 'Take a break from the monitor 5 minutes, will remind you in 1 minute if you will ignore this',
-        contextMessage: 'Sight keeper',
+        title: 'Take a break!',
+        message: 'Working period was ' + period + ' mins, your eyes should rest ' + idle + ' mins',
+        contextMessage: 'Sight keeper ',
         priority: 2,
         buttons: [{
           title: 'SKIP',
@@ -588,7 +589,7 @@
     function idleEnded () {
       notifIldeInded = new Notification('IDLE ENDED', {
         body: 'You can work',
-        icon: '../img/eyes_good.png'
+        icon: '../img/gj.png'
       });
     }
 
