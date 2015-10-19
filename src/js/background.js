@@ -67,8 +67,7 @@
     // Starts session period
     function startSession (time) {
       var t = time || +session.period.load(),
-        period = utils.ms2min(t),
-        idle = utils.ms2min(idle.period.load());
+        period = utils.ms2min(t);
 
       session.status.save('running');
       session.startDate.save(Date.now());
@@ -80,7 +79,7 @@
         endSession();
         console.log('session ended');
 
-        notify.sessionEnded(period, idle);
+        notify.sessionEnded(period);
         audio.play(1);
       }, t);
     }
@@ -553,12 +552,12 @@
     var notifIldeInded;
 
 
-    function sessionEnded (period, idle) {
+    function sessionEnded (period) {
       var options = {
         type: 'basic',
         iconUrl: '../img/eyes_tired2.png',
         title: 'Take a break!',
-        message: 'Working period was ' + period + ' mins, your eyes should rest ' + idle + ' mins',
+        message: 'Working period was ' + period + ' mins, your eyes should rest 5 mins',
         contextMessage: 'Sight keeper ',
         priority: 2,
         buttons: [{
