@@ -130,7 +130,7 @@
         return;
       }
 
-      // Idle state fired!
+      // IDLE state fired!
       if (idleState === 'idle') {
 
         // If session is running and user goes afk ,
@@ -147,15 +147,10 @@
           startIdle();
           console.log('idle started , period : ' + idle.period.load());
         }
-
-        if (idleStatus === 'paused') {
-          restartIdle();
-          console.log('idle restarted');
-        }
       }
 
 
-      // Active state fired!
+      // ACTIVE state fired!
       if (idleState === 'active') {
 
         // If user was afk while session was running -
@@ -168,12 +163,9 @@
         // If idle period is running and user have made an input -
         // notify user that idle period is not finished yet.
         if (idleStatus === 'running') {
-          // restartIdle();
-
-          pauseIdle();
+          restartIdle();
           notify.idlePaused();
-          audio.play(2);
-
+          audio.play(1);
           console.log('idle paused');
         }
 
@@ -182,7 +174,6 @@
         // 'idle finished'.
         if (idleStatus === 'stopped' && sessionStatus === 'stopped') {
           notify.closeIdleEnded();
-
           startSession();
           console.log('session started since did input, period : ' + session.period.load());
         }
@@ -334,30 +325,28 @@
     }
 
     function restartIdle () {
-
       clearTimeout(idle.timerId);
-
       startIdle();
     }
 
     // When user interupts idle period -
     // pause idle and notify user that period isn't finished yet.
-    function pauseIdle () {
-      var idlePeriod = idle.timeLeft || idle.period.load(),
+    // function pauseIdle () {
+    //   var idlePeriod = idle.timeLeft || idle.period.load(),
 
-        now = Date.now(),
+    //     now = Date.now(),
 
-        idleStartDate = idle.startDate.load();
+    //     idleStartDate = idle.startDate.load();
 
-      clearTimeout(idle.timerId);
-      idle.timerId = null;
+    //   clearTimeout(idle.timerId);
+    //   idle.timerId = null;
 
-      // Define how much time left
-      idle.timeLeft = idlePeriod - (now - idleStartDate);
+    //   // Define how much time left
+    //   idle.timeLeft = idlePeriod - (now - idleStartDate);
 
-      idle.status.save('paused');
+    //   idle.status.save('paused');
 
-    }
+    // }
 
     function trackAfk () {
       var t = idle.period.load();
