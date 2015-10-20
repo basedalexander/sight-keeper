@@ -7,36 +7,42 @@
   'use strict';
   var SK = function () {
 
+    var Static = SK.modules.Static,
+        router = new SK.modules.Router('bg'),
+        badger = new SK.modules.Badger(),
+        utils = new SK.modules.Utils(),
+        notify = new SK.modules.Notify(),
+        audio = new SK.modules.Audio();
+
     // Main state of the application
     // it could be either 'on' or 'off',
     // the user could manage it in popup
-    var state = new SK.modules.Static('state', 'on'),
+    var state = new Static('state', 'on'),
 
       session = {
 
         // Status of session period
         // it could be 'running' and 'stopped'
-        status: new SK.modules.Static('session.status', 'stopped'),
+        status: new Static('session.status', 'stopped'),
 
         // Configurable in popup options
-        period: new SK.modules.Static('session.period', '2700000'), //2700000 45min
-        startDate: new SK.modules.Static('session.startDate', '0'),
+        period: new Static('session.period', '60000'), //2700000 45min
+        startDate: new Static('session.startDate', '0'),
 
         // Idle detection interval for session period in seconds.
         idleDetect: 160
-
       },
 
       idle = {
 
         // Status of idle period
         // it could be 'running' and 'stopped'
-        status: new SK.modules.Static('idle.status', 'stopped'),
+        status: new Static('idle.status', 'stopped'),
 
         // Configurable in popup options
-        period: new SK.modules.Static('idle.period', '300000'), // 300000 5min
+        period: new Static('idle.period', '30000'), // 300000 5min
 
-        startDate: new SK.modules.Static('idle.startDate', '0'),
+        startDate: new Static('idle.startDate', '0'),
 
         // Idle detection interval for idle period in seconds.
         idleDetect: 15
@@ -54,20 +60,12 @@
     idle.status.reset();
     idle.startDate.reset();
 
-    // Init modules
-    var router = new SK.modules.Router('bg'),
-        badger = new SK.modules.Badger(),
-        utils = new SK.modules.Utils(),
-        notify = new SK.modules.Notify(),
-        audio = new SK.modules.Audio();
-
 
     // Basic functionality
 
     // Starts session period
     function startSession (time) {
-      var t = time || +session.period.load(),
-        period = utils.ms2min(t);
+      var t = time || +session.period.load();
 
       session.status.save('running');
       session.startDate.save(Date.now());
@@ -79,7 +77,7 @@
         endSession();
         console.log('session ended');
 
-        notify.sessionEnded(period);
+        notify.sessionEnded();
         audio.play(1);
       }, t);
     }
@@ -90,7 +88,7 @@
         idlePeriod,
         t;
 
-      // For cases when user was idling (was called this.trackAfk)
+      // For cases when user was idling (was called trackAfk())
       clearTimeout(session.timerId);
       session.timerId = null;
 
@@ -101,7 +99,7 @@
       session.startDate.reset();
 
       // If session period successfully ended
-      chrome.idle.setDetectionInterval(60); // 150
+      chrome.idle.setDetectionInterval(15);
 
       // If session period finished while user is still afk - run idle
       // manually
@@ -135,7 +133,6 @@
       idle.timerId = setTimeout(function () {
         endIdle();
         console.log('idle ended');
-
 
         notify.idleEnded();
         audio.play(3);
@@ -549,29 +546,64 @@
   SK.modules.Notify = function () {
     console.info('Notify module');
 
-    var notifIldeInded;
+    var sessionOpts = {
+      type: 'basic',
+      iconUrl: '../img/eyes_tired2.png',
+      title: 'Take a break!',
+      message: 'Working period was 45 mins, your eyes should rest 5 mins',
+      contextMessage: 'Sight keeper ',
+      priority: 2,
+      buttons: [{
+        title: 'SKIP',
+        iconUrl: '../img/ignore_ico.jpg'
+      }, {
+        title: 'Remind in 5 minutes',
+        iconUrl: '../img/remind_ico.jpg'
+      }]
+    },
+
+    idlePausedOpts = {
+      type: 'basic',
+      iconUrl: '../img/!.png',
+      title: 'Restarting idle..',
+      message: 'Don\'t touch PC untill the idle end',
+      contextMessage: 'Sight keeper',
+      priority: 2,
+      buttons: [{
+        title: 'SKIP idle',
+        iconUrl: '../img/ignore_ico.jpg'
+      }]
+    },
+
+    idleEndedOpts = {
+      body: 'Your eyes enough rest',
+      icon: '../img/gj.png'
+    },
+
+    // Stores Notification instance
+    notifIldeInded;
 
 
-    function sessionEnded (period) {
-      var options = {
-        type: 'basic',
-        iconUrl: '../img/eyes_tired2.png',
-        title: 'Take a break!',
-        message: 'Working period was ' + period + ' mins, your eyes should rest 5 mins',
-        contextMessage: 'Sight keeper ',
-        priority: 2,
-        buttons: [{
-          title: 'SKIP',
-          iconUrl: '../img/ignore_ico.jpg'
-        }, {
-          title: 'Remind in 5 minutes',
-          iconUrl: '../img/remind_ico.jpg'
-        }]
-      };
+    function sessionEnded () {
+      // var options = {
+      //   type: 'basic',
+      //   iconUrl: '../img/eyes_tired2.png',
+      //   title: 'Take a break!',
+      //   message: 'Working period was 45 mins, your eyes should rest 5 mins',
+      //   contextMessage: 'Sight keeper ',
+      //   priority: 2,
+      //   buttons: [{
+      //     title: 'SKIP',
+      //     iconUrl: '../img/ignore_ico.jpg'
+      //   }, {
+      //     title: 'Remind in 5 minutes',
+      //     iconUrl: '../img/remind_ico.jpg'
+      //   }]
+      // };
 
 
       // @link https://developer.chrome.com/apps/notifications#method-create
-      chrome.notifications.create('sessionEnd', options, function (id) {
+      chrome.notifications.create('sessionEnd', sessionOpts, function (id) {
 
         setTimeout(function () {
 
@@ -586,10 +618,7 @@
     // notification showed untill user make any imput.
     // @link https://developer.mozilla.org/en-US/docs/Web/API/notification
     function idleEnded () {
-      notifIldeInded = new Notification('IDLE ENDED', {
-        body: 'You can work',
-        icon: '../img/gj.png'
-      });
+      notifIldeInded = new Notification('Good job!', idleEndedOpts);
     }
 
     function closeIdleEnded () {
@@ -604,27 +633,27 @@
 
       //   elapsed = utils.ms2min(idle.period.load() - idle.timeLeft),
 
-      var options = {
-          type: 'basic',
-          iconUrl: '../img/!.png',
-          title: 'Restarting idle..',
-          message: 'Don\'t touch PC untill the idle end',
-          contextMessage: 'Sight keeper',
-          priority: 2,
-          buttons: [{
-            title: 'SKIP idle',
-            iconUrl: '../img/ignore_ico.jpg'
-          }]
-        };
+      // var options = {
+      //     type: 'basic',
+      //     iconUrl: '../img/!.png',
+      //     title: 'Restarting idle..',
+      //     message: 'Don\'t touch PC untill the idle end',
+      //     contextMessage: 'Sight keeper',
+      //     priority: 2,
+      //     buttons: [{
+      //       title: 'SKIP idle',
+      //       iconUrl: '../img/ignore_ico.jpg'
+      //     }]
+      //   };
 
       // @link https://developer.chrome.com/apps/notifications#method-create
-      chrome.notifications.create('idlePaused', options, function (id) {
+      chrome.notifications.create('idlePaused', idlePausedOpts, function (id) {
 
         setTimeout(function () {
 
           // @link https://developer.chrome.com/apps/notifications#method-clear
           chrome.notifications.clear(id, function () {});
-        }, 23000);
+        }, 7000);
       });
     }
 
