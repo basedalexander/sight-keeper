@@ -26,7 +26,7 @@
         status: new Static('session.status', 'stopped'),
 
         // Configurable in popup options
-        period: new Static('session.period', '60000'), //2700000 45min
+        period: new Static('session.period', '2700000'), //2700000 45min
         startDate: new Static('session.startDate', '0'),
       },
 
@@ -37,7 +37,7 @@
         status: new Static('idle.status', 'stopped'),
 
         // Configurable in popup options
-        period: new Static('idle.period', '30000'), // 300000 5min
+        period: new Static('idle.period', '300000'), // 300000 5min
 
         startDate: new Static('idle.startDate', '0'),
       },
@@ -143,6 +143,10 @@
           startIdle();
           console.log('idle started , period : ' + idle.period.load());
         }
+
+        if (idleStatus === 'paused') {
+          startIdle();
+        }
       }
 
 
@@ -159,7 +163,7 @@
         // If idle period is running and user have made an input -
         // notify user that idle period is not finished yet.
         if (idleStatus === 'running') {
-          restartIdle();
+          pauseIdle();
           notify.idleInterrupted();
           audio.play(1);
         }
@@ -235,6 +239,12 @@
 
       session.timerId = setTimeout(function () {
         endSession();
+
+        if (!afk.timeoutId) {
+          notify.sessionEnded();
+          audio.play(1);
+        }
+
         console.log('session ended');
       }, t);
     }
@@ -259,9 +269,6 @@
         startIdle();
         console.log('idle started manually');
         dontTrackAfk();
-      } else {
-        notify.sessionEnded();
-        audio.play(1);
       }
     }
 
@@ -293,9 +300,9 @@
       idle.timeLeft = null;
     }
 
-    function restartIdle () {
-      clearTimeout(idle.timerId);
-      startIdle();
+    function pauseIdle () {
+      endIdle();
+      idle.status.save('paused');
     }
 
     // When user interupts idle period -
