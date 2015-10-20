@@ -8,16 +8,16 @@
   var SK = function () {
 
     var Static = SK.modules.Static,
-        router = new SK.modules.Router('bg'),
-        badger = new SK.modules.Badger(),
-        utils = new SK.modules.Utils(),
-        notify = new SK.modules.Notify(),
-        audio = new SK.modules.Audio();
+      router = new SK.modules.Router('bg'),
+      badger = new SK.modules.Badger(),
+      utils = new SK.modules.Utils(),
+      notify = new SK.modules.Notify(),
+      audio = new SK.modules.Audio(),
 
-    // Main state of the application
-    // it could be either 'on' or 'off',
-    // the user could manage it in popup
-    var state = new Static('state', 'on'),
+      // Main state of the application
+      // it could be either 'on' or 'off',
+      // the user could manage it in popup
+      state = new Static('state', 'on'),
 
       session = {
 
@@ -60,8 +60,190 @@
     idle.status.reset();
     idle.startDate.reset();
 
+    router.on('state', function (message) {
+        // Set this value to localStorage
+        localStorage.setItem(message.name, message.value);
+
+        // Then execute the main function
+        switcher();
+      }
+    );
+
 
     // Basic functionality
+
+    //Checks 'state' value  when app has been loaded,
+    // and does things depending on received value.
+    // todo untested
+    function switcher () {
+
+      // If app is on , then run it.
+      if (state.load() === 'on') {
+        switchOn();
+      } else {
+
+        // If it is 'off' then just change browserAction
+        switchOff();
+      }
+    }
+
+    function switchOn () {
+      console.info('switched ON');
+
+      addIdleListener();
+      addBtnListener();
+      startSession();
+      badger.enableIcon();
+
+      console.log('session started , period : ' + session.period.load());
+    }
+
+    function switchOff () {
+      console.log('SK is OFF');
+
+      state.save('off');
+
+      if (afk.timeoutId) {
+        dontTrackAfk();
+      }
+
+      endSession();
+      endIdle();
+      rmIdleListener();
+      rmBtnListener();
+      badger.disableIcon();
+      audio.stop();
+      notify.closeAll();
+    }
+
+    // Main logic of application
+    // Chrome idle state listener
+    // @link https://developer.chrome.com/extensions/idle
+    function idleListener (idleState) {
+      console.log(idleState + ' fired');
+
+      var idleStatus = idle.status.load(),
+        sessionStatus = session.status.load();
+
+      // If app state is 'off' - ignore
+      if (state.load() === 'off') {
+        return;
+      }
+
+      // Idle state fired!
+      if (idleState === 'idle') {
+
+        // If session is running and user goes afk ,
+        // start countdown certain amount of time, after witch
+        // app assumes that user have rested.
+        if (sessionStatus === 'running') {
+          trackAfk();
+          console.log('tracking AFK...');
+        }
+
+        // If session time elapsed and user doesn't do any inputs - start
+        // idle period.
+        if (sessionStatus === 'stopped' && idleStatus === 'stopped') {
+          startIdle();
+          console.log('idle started , period : ' + idle.period.load());
+        }
+
+        if (idleStatus === 'paused') {
+          restartIdle();
+          console.log('idle restarted');
+        }
+      }
+
+
+      // Active state fired!
+      if (idleState === 'active') {
+
+        // If user was afk while session was running -
+        // stop countdown afk time.
+        if (sessionStatus === 'running') {
+          dontTrackAfk();
+          console.log('stop tracking AFK');
+        }
+
+        // If idle period is running and user have made an input -
+        // notify user that idle period is not finished yet.
+        if (idleStatus === 'running') {
+          // restartIdle();
+
+          pauseIdle();
+          notify.idlePaused();
+          audio.play(2);
+
+          console.log('idle paused');
+        }
+
+        // If idle period finished and user makes an input -
+        // start session period and close desktop notification
+        // 'idle finished'.
+        if (idleStatus === 'stopped' && sessionStatus === 'stopped') {
+          notify.closeIdleEnded();
+
+          startSession();
+          console.log('session started since did input, period : ' + session.period.load());
+        }
+      }
+    }
+
+    function addIdleListener () {
+      chrome.idle.onStateChanged.addListener(idleListener);
+      console.log('idle listener added');
+    }
+
+    function rmIdleListener () {
+      chrome.idle.onStateChanged.removeListener(idleListener);
+      console.log('idle listener removed');
+    }
+
+
+    // Chrome notification button's handler
+    // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
+    function btnListener (id, buttonIndex) {
+
+      // Close notification when user clicks any button
+      chrome.notifications.clear(id, function () {});
+
+      if (id === 'sessionEnd') {
+
+        if (buttonIndex === 0) {
+          startSession();
+          console.log('session started by skipping idle , period : ' + utils.ms2min(session.period.load()) + ' min');
+        } else {
+
+          // TODO make this value configurable.
+          // get rid of hardcode
+          startSession(5 * 60000);
+          console.log('session started , reminder, period : ' + utils.ms2min(5 * 60000) + ' min');
+        }
+      }
+
+      if (id === 'idlePaused') {
+
+        if (buttonIndex === 0) {
+
+          idle.timerId = null;
+
+          idle.status.reset();
+          idle.startDate.reset();
+
+          startSession();
+        }
+      }
+    }
+
+    function addBtnListener () {
+      chrome.notifications.onButtonClicked.addListener(btnListener);
+      console.log('btn listener added');
+    }
+
+    function rmBtnListener () {
+      chrome.notifications.onButtonClicked.removeListener(btnListener);
+      console.log('btn listener removed');
+    }
 
     // Starts session period
     function startSession (time) {
@@ -197,202 +379,20 @@
     }
 
 
-    //Checks 'state' value  when app has been loaded,
-    // and does things depending on received value.
-    // todo untested
-    function checkState () {
-
-      // If app is on , then run it.
-      if (state.load() === 'on') {
-        switchOn();
-      } else {
-
-        // If it is 'off' then just change browserAction
-        switchOff();
-      }
-    }
-
-    function switchOn () {
-      console.info('switched ON');
-
-      addIdleListener();
-      addBtnListener();
-      startSession();
-      badger.enableIcon();
-
-      console.log('session started , period : ' + session.period.load());
-    }
-
-    function switchOff () {
-      console.log('SK is OFF');
-
-      state.save('off');
-
-      if (afk.timeoutId) {
-        dontTrackAfk();
-      }
-
-      endSession();
-      endIdle();
-      rmIdleListener();
-      rmBtnListener();
-      badger.disableIcon();
-      audio.stop();
-      notify.closeAll();
-    }
-
-
-
-
-
-
-
-
-    // Main logic of application
-    // Chrome idle state listener
-    // @link https://developer.chrome.com/extensions/idle
-    function idleListener (idleState) {
-      console.log(idleState + ' fired');
-
-      var idleStatus = idle.status.load(),
-        sessionStatus = session.status.load();
-
-      // If app state is 'off' - ignore
-      if (state.load() === 'off') {
-        return;
-      }
-
-      // Idle state fired!
-      if (idleState === 'idle') {
-
-        // If session is running and user goes afk ,
-        // start countdown certain amount of time, after witch
-        // app assumes that user have rested.
-        if (sessionStatus === 'running') {
-          trackAfk();
-          console.log('tracking AFK...');
-        }
-
-        // If session time elapsed and user doesn't do any inputs - start
-        // idle period.
-        if (sessionStatus === 'stopped' && idleStatus === 'stopped') {
-          startIdle();
-          console.log('idle started , period : ' + idle.period.load());
-        }
-
-        if (idleStatus === 'paused') {
-          restartIdle();
-          console.log('idle restarted');
-        }
-      }
-
-
-      // Active state fired!
-      if (idleState === 'active') {
-
-        // If user was afk while session was running -
-        // stop countdown afk time.
-        if (sessionStatus === 'running') {
-          dontTrackAfk();
-          console.log('stop tracking AFK');
-        }
-
-        // If idle period is running and user have made an input -
-        // notify user that idle period is not finished yet.
-        if (idleStatus === 'running') {
-          // restartIdle();
-
-          pauseIdle();
-          notify.idlePaused();
-          audio.play(2);
-
-          console.log('idle paused');
-        }
-
-        // If idle period finished and user makes an input -
-        // start session period and close desktop notification
-        // 'idle finished'.
-        if (idleStatus === 'stopped' && sessionStatus === 'stopped') {
-          notify.closeIdleEnded();
-
-          startSession();
-          console.log('session started since did input, period : ' + session.period.load());
-        }
-      }
-    }
-
-    function addIdleListener () {
-      chrome.idle.onStateChanged.addListener(idleListener);
-      console.log('idle listener added');
-    }
-
-    function rmIdleListener () {
-      chrome.idle.onStateChanged.removeListener(idleListener);
-      console.log('idle listener removed');
-    }
-
-
-    // Chrome notification button's handler
-    // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
-    function btnListener (id, buttonIndex) {
-
-      // Close notification when user clicks any button
-      chrome.notifications.clear(id, function () {});
-
-      if (id === 'sessionEnd') {
-
-        if (buttonIndex === 0) {
-          startSession();
-          console.log('session started by skipping idle , period : ' + utils.ms2min(session.period.load()) + ' min');
-        } else {
-
-          // TODO make this value configurable.
-          // get rid of hardcode
-          startSession(5 * 60000);
-          console.log('session started , reminder, period : ' + utils.ms2min(5 * 60000) + ' min');
-        }
-      }
-
-      if (id === 'idlePaused') {
-
-        if (buttonIndex === 0) {
-
-          idle.timerId = null;
-
-          idle.status.reset();
-          idle.startDate.reset();
-
-          startSession();
-        }
-      }
-    }
-
-    function addBtnListener () {
-      chrome.notifications.onButtonClicked.addListener(btnListener);
-      console.log('btn listener added');
-    }
-
-    function rmBtnListener () {
-      chrome.notifications.onButtonClicked.removeListener(btnListener);
-      console.log('btn listener removed');
-    }
-
-
     router.on('state', function (message) {
 
        // Set this value to localStorage
        localStorage.setItem(message.name, message.value);
 
        // Then execute the main function
-       checkState();
+       switcher();
       }
     );
 
-
-    checkState();
-
     this.switchOn = switchOn;
     this.switchOff = switchOff;
+
+    switcher();
   };
 
 
@@ -402,6 +402,17 @@
   // setting value in localStorage to given key.
   SK.modules.Static = (function () {
     console.info('Static module');
+
+    function createClass(target, props) {
+      for (var key in props) {
+        var prop = props[key];
+
+        // @link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
+        prop.configurable = true;
+        prop.writable = true;
+      }
+      Object.defineProperties(target.prototype, props);
+    }
 
     function Static (name, defaultValue) {
 
@@ -417,7 +428,7 @@
       this.load();
     }
 
-    _createClass(Static, {
+    createClass(Static, {
 
       // Sets value to defaultValue and returns it
       reset: {
@@ -458,13 +469,6 @@
     return Static;
   })();
 
-  // Creates an object that can:
-  //
-  // *  Add listeners for handling
-  //    particular messages that arrive from another scripts
-  //    within extention.
-  //
-  // *  Send messages throughout the extention.
   SK.modules.Router = function (identifier) {
 
     // Unique identifier for current script
@@ -502,7 +506,6 @@
     this.send = send;
     this.on = on;
   };
-
 
   SK.modules.Badger = function () {
     console.info('badger module');
@@ -700,25 +703,5 @@
   };
 
 
-  // Miscellaneous functions
-  function _createClass(target, props) {
-
-    for (var key in props) {
-
-      var prop = props[key];
-
-      // @link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
-      prop.configurable = true;
-
-      prop.writable = true;
-    }
-
-    Object.defineProperties(target.prototype, props);
-  }
-
-
-
-
-
-
-  window.sk = new SK(); })(window, window.document);
+  window.sk = new SK();
+})(window, window.document);
