@@ -28,9 +28,6 @@
         // Configurable in popup options
         period: new Static('session.period', '60000'), //2700000 45min
         startDate: new Static('session.startDate', '0'),
-
-        // Idle detection interval for session period in seconds.
-        idleDetect: 160
       },
 
       idle = {
@@ -43,9 +40,6 @@
         period: new Static('idle.period', '30000'), // 300000 5min
 
         startDate: new Static('idle.startDate', '0'),
-
-        // Idle detection interval for idle period in seconds.
-        idleDetect: 15
       },
 
       // Object for tracking afk state
@@ -59,6 +53,8 @@
     session.startDate.reset();
     idle.status.reset();
     idle.startDate.reset();
+
+    chrome.idle.setDetectionInterval(15);
 
     router.on('state', function (message) {
         // Set this value to localStorage
@@ -164,9 +160,8 @@
         // notify user that idle period is not finished yet.
         if (idleStatus === 'running') {
           restartIdle();
-          notify.idlePaused();
+          notify.idleInterrupted();
           audio.play(1);
-          console.log('idle paused');
         }
 
         // If idle period finished and user makes an input -
@@ -175,7 +170,7 @@
         if (idleStatus === 'stopped' && sessionStatus === 'stopped') {
           notify.closeIdleEnded();
           startSession();
-          console.log('session started since did input, period : ' + session.period.load());
+          console.log('session started since did input');
         }
       }
     }
@@ -212,15 +207,10 @@
         }
       }
 
-      if (id === 'idlePaused') {
+      if (id === 'idleInterrupted') {
 
         if (buttonIndex === 0) {
-
-          idle.timerId = null;
-
-          idle.status.reset();
-          idle.startDate.reset();
-
+          endIdle();
           startSession();
         }
       }
@@ -243,23 +233,14 @@
       session.status.save('running');
       session.startDate.save(Date.now());
 
-      // Set interval for session period
-      chrome.idle.setDetectionInterval(session.idleDetect);
-
       session.timerId = setTimeout(function () {
         endSession();
         console.log('session ended');
-
-        notify.sessionEnded();
-        audio.play(1);
       }, t);
     }
 
     // It called when session period elapsed
     function endSession () {
-      var now = Date.now(),
-        idlePeriod,
-        t;
 
       // For cases when user was idling (was called trackAfk())
       clearTimeout(session.timerId);
@@ -271,26 +252,16 @@
       // Sets session startDate to default ('0')
       session.startDate.reset();
 
-      // If session period successfully ended
-      chrome.idle.setDetectionInterval(15);
-
       // If session period finished while user is still afk - run idle
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
       if (afk.timeoutId) {
-        idlePeriod = +idle.period.load();
-
-        // Define how long user was afk
-        t = now - afk.startDate;
-
-        // And start idle immediately but not full idlePeriod
-        startIdle(idlePeriod - t);
-        console.log('idle started , custom period : ' + (idlePeriod - t));
-
-
-        // Clear afk timerId
+        startIdle();
+        console.log('idle started manually');
         dontTrackAfk();
-        console.log('stop tracking AFK by endSession');
+      } else {
+        notify.sessionEnded();
+        audio.play(1);
       }
     }
 
@@ -300,8 +271,6 @@
 
       idle.status.save('running');
       idle.startDate.save(Date.now());
-
-      chrome.idle.setDetectionInterval(idle.idleDetect);
 
       idle.timerId = setTimeout(function () {
         endIdle();
@@ -350,7 +319,6 @@
 
     function trackAfk () {
       var t = idle.period.load();
-
       afk.startDate = Date.now();
 
       afk.timeoutId = setTimeout(function () {
@@ -554,11 +522,11 @@
       }]
     },
 
-    idlePausedOpts = {
+    idleInterruptedOpts = {
       type: 'basic',
-      iconUrl: '../img/!.png',
-      title: 'Restarting idle..',
-      message: 'Don\'t touch PC untill the idle end',
+      iconUrl: '../img/eyes_tired2.png',
+      title: 'Nope, you should rest',
+      message: 'Don\'t touch the computer untill the idle end',
       contextMessage: 'Sight keeper',
       priority: 2,
       buttons: [{
@@ -577,22 +545,6 @@
 
 
     function sessionEnded () {
-      // var options = {
-      //   type: 'basic',
-      //   iconUrl: '../img/eyes_tired2.png',
-      //   title: 'Take a break!',
-      //   message: 'Working period was 45 mins, your eyes should rest 5 mins',
-      //   contextMessage: 'Sight keeper ',
-      //   priority: 2,
-      //   buttons: [{
-      //     title: 'SKIP',
-      //     iconUrl: '../img/ignore_ico.jpg'
-      //   }, {
-      //     title: 'Remind in 5 minutes',
-      //     iconUrl: '../img/remind_ico.jpg'
-      //   }]
-      // };
-
 
       // @link https://developer.chrome.com/apps/notifications#method-create
       chrome.notifications.create('sessionEnd', sessionOpts, function (id) {
@@ -620,26 +572,10 @@
       }
     }
 
-    function idlePaused () {
-      // var total = utils.ms2min(idle.period.load()),
-
-      //   elapsed = utils.ms2min(idle.period.load() - idle.timeLeft),
-
-      // var options = {
-      //     type: 'basic',
-      //     iconUrl: '../img/!.png',
-      //     title: 'Restarting idle..',
-      //     message: 'Don\'t touch PC untill the idle end',
-      //     contextMessage: 'Sight keeper',
-      //     priority: 2,
-      //     buttons: [{
-      //       title: 'SKIP idle',
-      //       iconUrl: '../img/ignore_ico.jpg'
-      //     }]
-      //   };
+    function idleInterrupted () {
 
       // @link https://developer.chrome.com/apps/notifications#method-create
-      chrome.notifications.create('idlePaused', idlePausedOpts, function (id) {
+      chrome.notifications.create('idleInterrupted', idleInterruptedOpts, function (id) {
 
         setTimeout(function () {
 
@@ -660,7 +596,7 @@
     this.sessionEnded = sessionEnded;
     this.idleEnded = idleEnded;
     this.closeIdleEnded = closeIdleEnded;
-    this.idlePaused = idlePaused;
+    this.idleInterrupted = idleInterrupted;
     this.closeAll = closeAll;
   };
 
