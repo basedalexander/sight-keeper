@@ -58,10 +58,23 @@
 
     router.on('state', function (message) {
         // Set this value to localStorage
-        localStorage.setItem(message.name, message.value);
+        var st = state.save(message.value);
 
         // Then execute the main function
         switcher();
+        return st;
+      }
+    );
+
+    router.on('sessionRestart', function (message) {
+        restartSession();
+        return 1;
+      }
+    );
+
+    router.on('sessionIdle', function (message) {
+        restartIdle();
+        return 1;
       }
     );
 
@@ -272,6 +285,13 @@
       }
     }
 
+    function restartSession () {
+      audio.stop();
+      notify.closeAll();
+      endSession();
+      startSession();
+    }
+
     // Starts idle period
     function startIdle(time) {
       var t = time || +idle.period.load();
@@ -305,24 +325,12 @@
       idle.status.save('paused');
     }
 
-    // When user interupts idle period -
-    // pause idle and notify user that period isn't finished yet.
-    // function pauseIdle () {
-    //   var idlePeriod = idle.timeLeft || idle.period.load(),
-
-    //     now = Date.now(),
-
-    //     idleStartDate = idle.startDate.load();
-
-    //   clearTimeout(idle.timerId);
-    //   idle.timerId = null;
-
-    //   // Define how much time left
-    //   idle.timeLeft = idlePeriod - (now - idleStartDate);
-
-    //   idle.status.save('paused');
-
-    // }
+    function restartIdle () {
+      audio.stop();
+      notify.closeAll();
+      endIdle();
+      startIdle();
+    }
 
     function trackAfk () {
       var t = idle.period.load();
@@ -341,17 +349,6 @@
       afk.timeoutId = null;
       afk.startDate = null;
     }
-
-
-    router.on('state', function (message) {
-
-       // Set this value to localStorage
-       localStorage.setItem(message.name, message.value);
-
-       // Then execute the main function
-       switcher();
-      }
-    );
 
     this.switchOn = switchOn;
     this.switchOff = switchOff;
@@ -459,7 +456,7 @@
         if (message.id !== id && message.name === name) {
 
           // Handle message
-          handler(message);
+          cb(handler(message));
         }
       };
 

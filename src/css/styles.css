@@ -1,0 +1,136 @@
+/*
+look at the weird glitch on the 6th button. something to do with color vs background-color. or did i fuck up?
+*/
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Helvetica', sans-serif;
+  width: 300px;
+  height: 200px;
+}
+
+.options {
+  padding: 5px;
+}
+
+.option {
+  height : 37px;
+  line-height: 37px;
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid #ccc;
+}
+
+.option-name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.57);
+}
+
+/* Button 0 */
+.button-wrap {
+  width: 160px;
+  margin: 40px auto 0;
+  cursor: pointer;
+}
+.button-bg {
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+  border-radius: 40px;
+  padding: 3px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+.button-switch {
+  position: relative;
+  left: 0px;
+  width: 74px;
+  height: 74px;
+  border: solid 22px;
+  border-radius: 36px;
+  transition: all 0.2s ease;
+}
+.button-active .button-switch {
+  left: 80px;
+}
+.button-on,
+.button-off {
+  position: absolute;
+  transition: all 0.2s ease;
+  padding-top: 15px;
+  font-size: 2.4em;
+  font-weight: bold;
+}
+.button-on {
+  margin-left: 110px;
+}
+.button-off {
+  margin-left: 30px;
+  color: #dd2222;
+}
+.button-active .button-off {
+  color: #fff;
+}
+.button-active .button-on {
+  color: #22dd22;
+}
+.button-active .button-bg {
+  background-color: #000;
+}
+
+.btn {
+  float: right;
+}
+
+.btn .button-wrap {
+  width: 55px;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+}
+.btn .button-bg {
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+  border-radius: 40px;
+  padding: 3px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+.btn .button-switch {
+  position: relative;
+  left: 0px;
+  width: 22px;
+  height: 22px;
+  border: solid 6px;
+  background-color: #fff;
+  border-radius: 36px;
+  transition: all 0.2s ease;
+}
+.btn .button-active .button-switch {
+  left: 27px;
+}
+.btn .button-in,
+.btn .button-out {
+  position: absolute;
+  transition: all 0.2s ease;
+  padding-top: 15px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.btn .button-in {
+  margin-left: 76px;
+}
+.btn .button-out {
+  margin-left: 18px;
+}
+.btn .button-active .button-bg {
+  background-color: rgba(34, 122, 187, 0.76);
+}
