@@ -57,8 +57,14 @@
     chrome.idle.setDetectionInterval(15);
 
     router.on('state', function (message) {
+        var st;
+
+        if (!message.value) {
+          return state.load();
+        }
+
         // Set this value to localStorage
-        var st = state.save(message.value);
+         st = state.save(message.value);
 
         // Then execute the main function
         switcher();
@@ -102,6 +108,7 @@
       addIdleListener();
       addBtnListener();
       startSession();
+      router.send('sessionStarted');
       badger.enableIcon();
 
       console.log('session started , period : ' + session.period.load());
@@ -117,7 +124,9 @@
       }
 
       endSession();
+      router.send('sessionEnded');
       endIdle();
+      router.send('idleInded');
       rmIdleListener();
       rmBtnListener();
       badger.disableIcon();
@@ -154,11 +163,13 @@
         // idle period.
         if (sessionStatus === 'stopped' && idleStatus === 'stopped') {
           startIdle();
+          router.send('idleStarted');
           console.log('idle started , period : ' + idle.period.load());
         }
 
         if (idleStatus === 'paused') {
           startIdle();
+          router.send('idleStarted');
         }
       }
 
@@ -179,6 +190,7 @@
           pauseIdle();
           notify.idleInterrupted();
           audio.play(1);
+          router.send('idleEnded');
         }
 
         // If idle period finished and user makes an input -
@@ -187,6 +199,7 @@
         if (idleStatus === 'stopped' && sessionStatus === 'stopped') {
           notify.closeIdleEnded();
           startSession();
+          router.send('sessionStarted');
           console.log('session started since did input');
         }
       }
@@ -226,11 +239,14 @@
 
       if (id === 'idleInterrupted') {
 
+
         if (buttonIndex === 0) {
           endIdle();
           startSession();
         }
       }
+
+      router.send('sessionStarted');
     }
 
     function addBtnListener () {
@@ -250,6 +266,7 @@
       session.status.save('running');
       session.startDate.save(Date.now());
 
+
       session.timerId = setTimeout(function () {
         endSession();
 
@@ -259,6 +276,7 @@
         }
 
         console.log('session ended');
+
       }, t);
     }
 
@@ -275,14 +293,19 @@
       // Sets session startDate to default ('0')
       session.startDate.reset();
 
+      router.send('sessionEnded');
+
+
       // If session period finished while user is still afk - run idle
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
       if (afk.timeoutId) {
         startIdle();
+        router.send('idleStarted');
         console.log('idle started manually');
         dontTrackAfk();
       }
+
     }
 
     function restartSession () {
@@ -305,6 +328,7 @@
 
         notify.idleEnded();
         audio.play(3);
+        router.send('idleEnded');
       }, t);
     }
 
@@ -339,6 +363,7 @@
       afk.timeoutId = setTimeout(function () {
         dontTrackAfk();
         endSession();
+        router.send('sessionEnded');
 
         console.log('session ended by AFK tracker');
       }, t);
