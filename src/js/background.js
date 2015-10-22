@@ -290,12 +290,16 @@
 
 
       session.timerId = setTimeout(function () {
-        endSession();
 
         if (!afk.timeoutId) {
           notify.sessionEnded();
           audio.play(1);
+        } else {
+          audio.play(1);
         }
+
+        endSession();
+
 
         console.log('session ended');
 
