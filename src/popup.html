@@ -9,6 +9,7 @@
         float:right;
     }*/
     </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 
@@ -16,16 +17,37 @@
     <div class="options">
         <div class='option'>
             <span class='option-name'>Sight keeper</span>
-            <div class="btn">
-                <div class="button-wrap">
-                    <div class="button-bg">
-                        <div class="button-out"></div>
-                        <div class="button-in"></div>
-                        <div class="button-switch"></div>
+            <div class="btn" id='btn'>
+                <div class="btn-wrap">
+                    <div class="btn-bg">
+                        <div class="btn-out"></div>
+                        <div class="btn-in"></div>
+                        <div class="btn-switch"></div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="option">
+            <span class="period-name">work</span>
+            <input type='number' min='30' max='120' id='session-input' class='period-input'>
+            <span class="period-input-controls">edit</span>
+            <button id="session-restart" class='period-restart-btn'>
+                <img src="img/reset.png">
+            </button>
+            <span id='session-timer' class='timer'>00:00</span>
+        </div>
+
+        <div class="option">
+            <span class="period-name">rest</span>
+            <input type='number' min='5' max='30' id='idle-input' class='period-input'>
+            <span class="period-input-controls">edit</span>
+            <button id="idle-restart" class='period-restart-btn'>
+                <img src="img/reset.png">
+            </button>
+            <span id='idle-timer' class='timer'>00:00</span>
+        </div>
+
     </div>
     <script src="js/popup.js"></script>
 </body>

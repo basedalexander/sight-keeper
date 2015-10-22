@@ -1,55 +1,250 @@
-var switcher = document.querySelector('#app');
-
-var message = {
-  id: 'FRONTEND',
-  name: 'state',
-  value: 'off'
-};
-
-var btn = document.body.querySelector('.button-wrap');
-btn.addEventListener('click', function() {
-  if (this.classList.contains('button-active')) {
-    message.value = 'off';
-  } else {
-    message.value = 'on';
-  }
-
-  this.classList.toggle("button-active");
-
-  chrome.runtime.sendMessage(message, function () {});
-});
-
-document.body.addEventListener('dblclick', function (e) {
-  e.preventDefault();
-});
-
-(function init() {
-  var state = localStorage.getItem('state');
-  if (state === 'on') {
-    btn.classList.add('button-active');
-   } else {
-    btn.classList.remove('button-active');
-  }
-})();
+(function (window, document) {
+  'use strict';
+  var SK = function () {
+    var switcherBtn = document.getElementById('btn'),
+      sessionInput = document.getElementById('session-input'),
+      idleInput = document.getElementById('idle-input'),
+      sessionRestartBtn = document.getElementById('session-restart'),
+      idleRestartBtn = document.getElementById('idle-restart'),
 
 
+      // Init modules
+      router = new SK.modules.Router('fr'),
+      utils = new SK.modules.Utils(),
+      audio = new SK.modules.Audio(),
+      timer = new SK.modules.Timer();
+
+      (function init() {
+        var state = localStorage.getItem('state'),
+          sessionPeriod = localStorage.getItem('session.period'),
+          idlePeriod = localStorage.getItem('idle.period');
+
+        if (state === 'on') {
+          switcherBtn.classList.add('btn-active');
+          timer.showSession();
+         } else {
+          switcherBtn.classList.remove('btn-active');
+        }
+
+        sessionInput.value = utils.ms2min(sessionPeriod);
+        idleInput.value = utils.ms2min(idlePeriod);
+
+      })();
+
+      switcherBtn.addEventListener('click', function(e) {
+        if (this.classList.contains('btn-active')) {
+
+          this.classList.remove("btn-active");
+          router.send('state', 'off' , function () {} );
+
+        } else {
+          this.classList.add("btn-active");
+          router.send('state', 'on' , function () {
+          } );
+        }
+
+      });
+
+      sessionRestartBtn.addEventListener('click', function () {
+        timer.restartSession();
+
+        chrome.runtime.sendMessage({
+          id: 'popup',
+          name: 'sessionRestart',
+          value: '.'
+        }, function (answer) {
+          timer.showSession();
+        });
+      });
+
+      router.on('sessionStarted', function () {
+        timer.clearIdle();
+        timer.clearSession();
+        timer.showSession();
+      });
+
+      router.on('sessionEnded', function () {
+        timer.clearIdle();
+        timer.clearSession();
+      });
+
+      router.on('idleStarted', function () {
+       timer.clearSession();
+        timer.clearIdle();
+        timer.showIdle();
+      });
+
+      router.on('idleEnded', function () {
+        timer.clearIdle();
+      });
+  };
 
 
-// function send(messageObj, responseCallback) {
-//   chrome.runtime.sendMessage(messageObj, responseCallback);
-// }
+  SK.modules = {};
 
-// switcher.addEventListener('change', function (e) {
-//   if (e.target.checked) {
-//     message.value = 'on';
-//   } else {
-//     message.value = 'off';
-//   }
+  // Creates an object that has methods for retrieving and
+  // setting value in localStorage to given key.
 
-//   chrome.runtime.sendMessage(message, function () {});
+  SK.modules.Router = function (identifier) {
 
-// });
+    // Unique identifier for current script
+    var id = identifier;
+
+    function send (name, value, cb) {
+
+      // @link https://developer.chrome.com/extensions/runtime#method-sendMessage
+      chrome.runtime.sendMessage({
+          id: id,
+          name: name,
+          value: value
+        },
+      cb);
+    }
+
+    function on (name, handler) {
+
+      // Save handler in router object.
+      this[name] = function (message, sender, cb) {
+
+        // If message was send from another Router instance or
+        // message name is not what we expecting then do nothing.
+        if (message.id !== id && message.name === name) {
+
+          // Handle message
+          cb(handler(message));
+        }
+      };
+
+      // @link https://developer.chrome.com/extensions/runtime#event-onMessage
+      chrome.runtime.onMessage.addListener(this[name]);
+    }
+
+    this.send = send;
+    this.on = on;
+  };
+
+  SK.modules.Utils = function () {
+    console.info('converter module');
+
+    this.ms2min = function (ms) {
+      return +(ms / 60000).toFixed(1);
+    };
+
+    this.min2ms = function (mins) {
+      return mins * 60000;
+    };
+
+    this.sec2ms = function (sec) {
+      return sec * 1000;
+    };
+
+    this.ms2sec = function (ms) {
+      return ms / 1000;
+    };
+  };
+
+  // Desktop notifications (chrome.notifications API and
+  // web Notifications API)
+
+  // Audio notifications
+  SK.modules.Audio = function () {
+    console.info('audio module');
+
+    // dependency
+    var Static = SK.modules.Static,
+      audio = new Audio('');
+
+    // Plays audio file with given index,
+    // get's volume from localStorage (user preference)
+    function play (index) {
+      audio.src = 'audio/' + index + '.ogg';
+      audio.play();
+    }
+
+    function stop () {
+      audio.src = '';
+    }
+
+    document.body.appendChild(audio);
+
+    this.play = play;
+    this.stop = stop;
+  };
+
+  SK.modules.Timer = function () {
+    var sessionTimer = document.getElementById('session-timer'),
+      idleTimer = document.getElementById('idle-timer'),
+      intervalId,
+      diff,
+      mins,
+      secs;
 
 
+    function showSession () {
+      var time = +localStorage.getItem('session.startDate');
+      if (!time) { return; }
 
+      sessionTimer.innerHTML = printTime(time);
+
+      intervalId = setInterval(function () {
+        sessionTimer.innerHTML = printTime(time);
+      }, 1000);
+    }
+
+    function clearSession () {
+      clearInterval(intervalId);
+      sessionTimer.innerHTML = '00:00';
+    }
+
+    function restartSession () {
+      clearSession();
+      showSession();
+    }
+
+
+    function showIdle () {
+      var time = +localStorage.getItem('idle.startDate');
+      if (!time) { return; }
+
+      idleTimer.innerHTML = printTime(time);
+
+      intervalId = setInterval(function () {
+        idleTimer.innerHTML = printTime(time);
+      }, 1000);
+    }
+
+
+    function clearIdle () {
+      clearInterval(intervalId);
+      idleTimer.innerHTML = '00:00';
+    }
+
+
+    function restartIdle () {
+      clearIdle();
+      showIdle();
+    }
+
+    function printTime (time) {
+      diff = new Date(Date.now() - time);
+
+      mins = diff.getMinutes();
+      if (mins < 10) { mins = '0' + mins; }
+      secs = diff.getSeconds();
+      if (secs < 10) { secs = '0' + secs; }
+
+      return mins + ':' + secs;
+    }
+
+    this.showSession = showSession;
+    this.clearSession = clearSession;
+    this.showIdle = showIdle;
+    this.clearIdle = clearIdle;
+    this.restartSession = restartSession;
+    this.restartIdle = restartIdle;
+  };
+
+
+  window.sk = new SK();
+})(window, window.document);
 

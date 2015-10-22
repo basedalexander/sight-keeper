@@ -1,5 +1,5 @@
 /*
-look at the weird glitch on the 6th button. something to do with color vs background-color. or did i fuck up?
+look at the weird glitch on the 6th btn. something to do with color vs background-color. or did i fuck up?
 */
 *,
 *:before,
@@ -8,6 +8,14 @@ look at the weird glitch on the 6th button. something to do with color vs backgr
   -webkit-box-sizing: border-box;
   box-sizing: border-box;
 }
+
+input[type=number]::-webkit-inner-spin-btn,
+input[type=number]::-webkit-outer-spin-btn {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* MAIN */
 body {
   margin: 0;
   padding: 0;
@@ -16,8 +24,70 @@ body {
   height: 200px;
 }
 
+
+/* App btn */
+
+.btn {
+  float: right;
+}
+
+.btn-wrap {
+  width: 55px;
+  height: 28px;
+  margin: 0;
+  cursor: pointer;
+}
+.btn .btn-bg {
+  width: 100%;
+  height: 100%;
+  background-color: #ddd;
+  border-radius: 40px;
+  padding: 3px;
+  color: #fff;
+  transition: all 0.2s ease;
+}
+.btn .btn-switch {
+  position: relative;
+  left: 0px;
+  width: 22px;
+  height: 22px;
+  border: solid 6px;
+  background-color: #fff;
+  border-radius: 36px;
+  transition: all 0.2s ease;
+}
+
+.btn-active .btn-switch {
+  left: 27px;
+}
+.btn-active .btn-bg {
+  background-color: rgba(34, 122, 187, 0.76);
+}
+
+.btn .btn-in,
+.btn .btn-out {
+  position: absolute;
+  transition: all 0.2s ease;
+  padding-top: 15px;
+  font-size: 0.8em;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+.btn .btn-in {
+  margin-left: 76px;
+}
+.btn .btn-out {
+  margin-left: 18px;
+}
+
+
+/* Options */
+
 .options {
+  width: 100%;
   padding: 5px;
+  /*border:1px solid black;*/
+
 }
 
 .option {
@@ -30,107 +100,54 @@ body {
 .option-name {
   font-size: 14px;
   color: rgba(0, 0, 0, 0.57);
+  display: inline;
 }
 
-/* Button 0 */
-.button-wrap {
-  width: 160px;
-  margin: 40px auto 0;
-  cursor: pointer;
+.period-input {
+  display: inline-block;
+  width: 50px;
+  text-align: center;
 }
-.button-bg {
-  width: 100%;
-  height: 100%;
-  background-color: #000;
-  border-radius: 40px;
-  padding: 3px;
-  color: #fff;
-  transition: all 0.2s ease;
-}
-.button-switch {
-  position: relative;
-  left: 0px;
-  width: 74px;
-  height: 74px;
-  border: solid 22px;
-  border-radius: 36px;
-  transition: all 0.2s ease;
-}
-.button-active .button-switch {
-  left: 80px;
-}
-.button-on,
-.button-off {
-  position: absolute;
-  transition: all 0.2s ease;
-  padding-top: 15px;
-  font-size: 2.4em;
-  font-weight: bold;
-}
-.button-on {
-  margin-left: 110px;
-}
-.button-off {
-  margin-left: 30px;
-  color: #dd2222;
-}
-.button-active .button-off {
-  color: #fff;
-}
-.button-active .button-on {
-  color: #22dd22;
-}
-.button-active .button-bg {
-  background-color: #000;
+.period-input:focus {
+  background: rgba(255, 247, 0, 0.14);
+  border-style: solid;
+  border-color: #ccc;
 }
 
-.btn {
+.period-name {
+  width: 40px;
+  display: inline-block;
+}
+
+.period-restart-btn {
   float: right;
+  cursor: pointer;
+  border: none;
+  height: 35px;
+  background-color: transparent;
 }
 
-.btn .button-wrap {
-  width: 55px;
-  height: 28px;
-  margin: 0;
+.period-restart-btn:focus {
+  outline: 0;
+}
+
+.period-restart-btn img {
+  display: block;
+}
+
+.period-input-controls {
+  font-size: 0.85em;
+  color: rgba(0, 0, 0, .3);
+}
+
+.period-input-controls:hover {
+  text-decoration: underline;
   cursor: pointer;
 }
-.btn .button-bg {
-  width: 100%;
-  height: 100%;
-  background-color: #ddd;
-  border-radius: 40px;
-  padding: 3px;
-  color: #fff;
-  transition: all 0.2s ease;
-}
-.btn .button-switch {
-  position: relative;
-  left: 0px;
-  width: 22px;
-  height: 22px;
-  border: solid 6px;
-  background-color: #fff;
-  border-radius: 36px;
-  transition: all 0.2s ease;
-}
-.btn .button-active .button-switch {
-  left: 27px;
-}
-.btn .button-in,
-.btn .button-out {
-  position: absolute;
-  transition: all 0.2s ease;
-  padding-top: 15px;
-  font-size: 0.8em;
-  text-transform: uppercase;
-  font-weight: bold;
-}
-.btn .button-in {
-  margin-left: 76px;
-}
-.btn .button-out {
-  margin-left: 18px;
-}
-.btn .button-active .button-bg {
-  background-color: rgba(34, 122, 187, 0.76);
+
+.timer {
+  display: inline-block;
+  width: 40px;
+  float: right;
+  cursor: default;
 }
