@@ -84,6 +84,20 @@
       }
     );
 
+    router.on('session.period', function (message) {
+      session.period.save(message.value);
+
+      endSession();
+      router.send('sessionEnded');
+      endIdle();
+      router.send('idleInded');
+      startSession();
+      router.send('sessionStarted');
+    });
+
+    router.on('idle.period', function (message) {
+      idle.period.save(message.value);
+    });
 
     // Basic functionality
 

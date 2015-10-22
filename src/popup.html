@@ -30,22 +30,22 @@
 
         <div class="option">
             <span class="period-name">work</span>
-            <input type='number' min='30' max='120' id='session-input' class='period-input'>
-            <span class="period-input-controls">edit</span>
-            <button id="session-restart" class='period-restart-btn'>
+            <input type='number' min='1' max='300' id='session-input' class='period-input'>
+            <span id='session-apply-btn' class="period-input-btn btn-hidden" title="Save and restart work session">apply</span>
+            <button id="session-restart" class='period-restart-btn' title="Restart work period">
                 <img src="img/reset.png">
             </button>
-            <span id='session-timer' class='timer'>00:00</span>
+            <span id='session-timer' class='timer' title="Work timer">00:00</span>
         </div>
 
         <div class="option">
             <span class="period-name">rest</span>
             <input type='number' min='5' max='30' id='idle-input' class='period-input'>
-            <span class="period-input-controls">edit</span>
+            <span id='idle-apply-btn' class="period-input-btn btn-hidden" title="Save rest period">apply</span>
             <button id="idle-restart" class='period-restart-btn'>
                 <img src="img/reset.png">
             </button>
-            <span id='idle-timer' class='timer'>00:00</span>
+            <span id='idle-timer' class='timer' title="Rest timer">00:00</span>
         </div>
 
     </div>

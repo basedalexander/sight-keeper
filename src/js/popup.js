@@ -4,8 +4,11 @@
     var switcherBtn = document.getElementById('btn'),
       sessionInput = document.getElementById('session-input'),
       idleInput = document.getElementById('idle-input'),
+      sessionInputBtn = document.getElementById('session-apply-btn'),
+      idleInputBtn = document.getElementById('idle-apply-btn'),
       sessionRestartBtn = document.getElementById('session-restart'),
       idleRestartBtn = document.getElementById('idle-restart'),
+
 
 
       // Init modules
@@ -31,7 +34,7 @@
 
       })();
 
-      switcherBtn.addEventListener('click', function(e) {
+    switcherBtn.addEventListener('click', function(e) {
         if (this.classList.contains('btn-active')) {
 
           this.classList.remove("btn-active");
@@ -45,7 +48,7 @@
 
       });
 
-      sessionRestartBtn.addEventListener('click', function () {
+    sessionRestartBtn.addEventListener('click', function () {
         timer.restartSession();
 
         chrome.runtime.sendMessage({
@@ -57,24 +60,62 @@
         });
       });
 
-      router.on('sessionStarted', function () {
+    sessionInput.addEventListener('input', function (e) {
+        sessionInputBtn.classList.remove('btn-hidden');
+      });
+
+    sessionInputBtn.addEventListener('click', function () {
+        var value = +sessionInput.value,
+            min = sessionInput.min,
+            max = sessionInput.max;
+
+        if (!value) {
+          sessionInput.value = min;
+          return;
+        }
+
+        if (value < min) {sessionInput.value = value = min; }
+        if (value > max) { sessionInput.value = value = max; }
+
+        value = utils.min2ms(value);
+        this.classList.add('btn-hidden');
+
+        router.send('session.period', value, function () {
+        });
+
+      });
+
+    idleInput.addEventListener('input', function (e) {
+      idleInputBtn.classList.remove('btn-hidden');
+    });
+
+    idleInputBtn.addEventListener('click', function () {
+      var value = utils.min2ms(idleInput.value);
+      this.classList.add('btn-hidden');
+
+      router.send('idle.period', value, function () {
+      });
+
+    });
+
+    router.on('sessionStarted', function () {
         timer.clearIdle();
         timer.clearSession();
         timer.showSession();
       });
 
-      router.on('sessionEnded', function () {
+    router.on('sessionEnded', function () {
         timer.clearIdle();
         timer.clearSession();
       });
 
-      router.on('idleStarted', function () {
+    router.on('idleStarted', function () {
        timer.clearSession();
         timer.clearIdle();
         timer.showIdle();
       });
 
-      router.on('idleEnded', function () {
+    router.on('idleEnded', function () {
         timer.clearIdle();
       });
   };

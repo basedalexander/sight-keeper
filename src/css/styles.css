@@ -9,8 +9,8 @@ look at the weird glitch on the 6th btn. something to do with color vs backgroun
   box-sizing: border-box;
 }
 
-input[type=number]::-webkit-inner-spin-btn,
-input[type=number]::-webkit-outer-spin-btn {
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -135,12 +135,16 @@ body {
   display: block;
 }
 
-.period-input-controls {
+.period-input-btn {
   font-size: 0.85em;
   color: rgba(0, 0, 0, .3);
 }
 
-.period-input-controls:hover {
+.period-input-btn.btn-hidden {
+  visibility: hidden;
+}
+
+.period-input-btn:hover {
   text-decoration: underline;
   cursor: pointer;
 }
