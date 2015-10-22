@@ -123,6 +123,10 @@
 
     });
 
+    options.addEventListener('selectstart', function (e) {
+      e.preventDefault();
+    });
+
     router.on('sessionStarted', function () {
         timer.clearIdle();
         timer.clearSession();
