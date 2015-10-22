@@ -24,6 +24,10 @@ body {
   height: 200px;
 }
 
+button {
+  padding: 0;
+}
+
 
 /* App btn */
 
@@ -91,10 +95,18 @@ body {
 }
 
 .option {
+  position: relative;
   height : 37px;
   line-height: 37px;
   border-top: 1px solid transparent;
   border-bottom: 1px solid #ccc;
+}
+
+.options-disabled .option-wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: rgba(255, 255, 255, 0.86);
 }
 
 .option-name {
@@ -124,6 +136,7 @@ body {
   cursor: pointer;
   border: none;
   height: 35px;
+  width: 25px;
   background-color: transparent;
 }
 
@@ -154,4 +167,10 @@ body {
   width: 40px;
   float: right;
   cursor: default;
+}
+
+.idle-table {
+  float: right;
+  width: 25px;
+  color: rgba(0, 0, 0, .3);
 }

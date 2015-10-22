@@ -8,6 +8,7 @@
       idleInputBtn = document.getElementById('idle-apply-btn'),
       sessionRestartBtn = document.getElementById('session-restart'),
       idleRestartBtn = document.getElementById('idle-restart'),
+      options = document.getElementById('options'),
 
 
 
@@ -27,6 +28,7 @@
           timer.showSession();
          } else {
           switcherBtn.classList.remove('btn-active');
+          options.classList.add('options-disabled');
         }
 
         sessionInput.value = utils.ms2min(sessionPeriod);
@@ -38,10 +40,12 @@
         if (this.classList.contains('btn-active')) {
 
           this.classList.remove("btn-active");
+          options.classList.add('options-disabled');
           router.send('state', 'off' , function () {} );
 
         } else {
           this.classList.add("btn-active");
+          options.classList.remove('options-disabled');
           router.send('state', 'on' , function () {
           } );
         }
