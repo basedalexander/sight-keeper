@@ -33,7 +33,7 @@ describe('SK background.js', function () {
 
 
 
-describe('Static module', function () {
+xdescribe('Static module', function () {
 
   it('reset()', function() {
     spyOn(SK.state, 'save');
@@ -74,7 +74,7 @@ describe('Static module', function () {
 
 
 
-describe('Router module', function () {
+xdescribe('Router module', function () {
 
   beforeEach(function () {
 
@@ -113,7 +113,7 @@ describe('Router module', function () {
 
 
 
-describe('Badger module', function () {
+xdescribe('Badger module', function () {
   beforeEach(function () {
     chrome = {
       browserAction: {
@@ -155,7 +155,7 @@ describe('Badger module', function () {
 
 
 
-describe('Converter module', function () {
+xdescribe('Converter module', function () {
   it('ms2min', function () {
     expect(SK.ms2min(60000)).toEqual(1.0);
 
@@ -196,7 +196,7 @@ describe('Converter module', function () {
 
 
 
-describe('Notify module', function () {
+xdescribe('Notify module', function () {
   beforeEach(function () {
 
     //spyOn(chrome.notifications, 'create');
@@ -263,7 +263,7 @@ describe('Notify module', function () {
 
 
 
-describe('Audio module', function () {
+xdescribe('Audio module', function () {
 
   beforeEach(function () {
     spyOn(SK.audio, 'play');
