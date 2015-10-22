@@ -99,6 +99,14 @@
       idle.period.save(message.value);
     });
 
+    router.on('mute', function () {
+      audio.setVolume(0);
+    });
+
+    router.on('unmute', function () {
+      audio.setVolume(1);
+    });
+
     // Basic functionality
 
     //Checks 'state' value  when app has been loaded,
@@ -664,10 +672,15 @@
       audio.src = '';
     }
 
+    function setVolume (volume) {
+      volumeStatic.save(volume);
+    }
+
     document.body.appendChild(audio);
 
     this.play = play;
     this.stop = stop;
+    this.setVolume = setVolume;
   };
 
 
