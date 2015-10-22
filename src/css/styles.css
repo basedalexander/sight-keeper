@@ -133,6 +133,7 @@ button {
 .period-name {
   width: 40px;
   display: inline-block;
+  cursor: default;
 }
 
 .period-restart-btn {
@@ -177,6 +178,7 @@ button {
   float: right;
   width: 25px;
   color: rgba(0, 0, 0, .3);
+  cursor: default;
 }
 
 /* checkbox btn*/
