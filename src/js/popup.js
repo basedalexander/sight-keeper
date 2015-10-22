@@ -9,6 +9,7 @@
       sessionRestartBtn = document.getElementById('session-restart'),
       idleRestartBtn = document.getElementById('idle-restart'),
       options = document.getElementById('options'),
+      soundsBtn = document.getElementById('sounds-btn'),
 
 
 
@@ -21,7 +22,8 @@
       (function init() {
         var state = localStorage.getItem('state'),
           sessionPeriod = localStorage.getItem('session.period'),
-          idlePeriod = localStorage.getItem('idle.period');
+          idlePeriod = localStorage.getItem('idle.period'),
+          sounds = +localStorage.getItem('volume');
 
         if (state === 'on') {
           switcherBtn.classList.add('btn-active');
@@ -29,6 +31,12 @@
          } else {
           switcherBtn.classList.remove('btn-active');
           options.classList.add('options-disabled');
+        }
+
+        if (!sounds) {
+          soundsBtn.classList.add('disabled');
+        } else {
+          soundsBtn.classList.remove('disabled');
         }
 
         sessionInput.value = utils.ms2min(sessionPeriod);
@@ -99,6 +107,19 @@
 
       router.send('idle.period', value, function () {
       });
+
+    });
+
+    soundsBtn.addEventListener('click', function (e) {
+      var value = +localStorage.getItem('volume');
+      if (!value) {
+        router.send('unmute');
+        this.classList.remove('disabled');
+      } else {
+        router.send('mute');
+        this.classList.add('disabled');
+      }
+
 
     });
 
