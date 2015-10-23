@@ -538,13 +538,13 @@
     // @link https://developer.chrome.com/extensions/browserAction#method-setIcon
     this.disableIcon = function () {
       chrome.browserAction.setIcon({
-        path: '../img/popup-icon-off-19.png'
+        path: '../img/eye-icon-off-19.png' // '../img/popup-icon-off-19.png'
       }, function () {});
     };
 
     this.enableIcon = function () {
       chrome.browserAction.setIcon({
-        path: '../img/popup-icon-on-19.png'
+        path: '../img/eye-icon-on-19.png' // '../img/popup-icon-on-19.png'
       }, function () {});
     };
   };
@@ -576,9 +576,9 @@
 
     var sessionOpts = {
       type: 'basic',
-      iconUrl: '../img/eyes_tired2.png',
+      iconUrl: '../img/eye128.jpg', // '../img/eyes_tired2.png'
       title: 'Take a break!',
-      message: 'Working period was 45 mins, your eyes should rest 5 mins',
+      message: 'Do not touch the computer whole the rest period',
       contextMessage: 'Sight keeper ',
       priority: 2,
       buttons: [{
@@ -592,9 +592,9 @@
 
     idleInterruptedOpts = {
       type: 'basic',
-      iconUrl: '../img/eyes_tired2.png',
-      title: 'Nope, you should rest',
-      message: 'Don\'t touch the computer untill the idle end',
+      iconUrl: '../img/eye128.jpg',
+      title: 'Take a break!',
+      message: 'Do not touch the computer whole the rest period',
       contextMessage: 'Sight keeper',
       priority: 2,
       buttons: [{
@@ -604,8 +604,8 @@
     },
 
     idleEndedOpts = {
-      body: 'Your eyes enough rest',
-      icon: '../img/gj.png'
+      body: 'Now you can proceed',
+      icon: '../img/eye48.png' // '../img/gj.png'
     },
 
     // Stores Notification instance
