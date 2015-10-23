@@ -80,7 +80,7 @@
             min = sessionInput.min,
             max = sessionInput.max;
 
-        if (!value) {
+        if (!value || value < 0) {
           sessionInput.value = min;
           return;
         }
@@ -101,11 +101,22 @@
     });
 
     idleInputBtn.addEventListener('click', function () {
-      var value = utils.min2ms(idleInput.value);
+      var value = +idleInput.value,
+          min = idleInput.min,
+          max = idleInput.max;
+
+      if (!value || value < 0) {
+        idleInput.value = min;
+        return;
+      }
+
+      if (value < min) { idleInput.value = value = min; }
+      if (value > max) { idleInput.value = value = max; }
+
+      value = utils.min2ms(value);
       this.classList.add('btn-hidden');
 
-      router.send('idle.period', value, function () {
-      });
+      router.send('idle.period', value, function () {});
 
     });
 
