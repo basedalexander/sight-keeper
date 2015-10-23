@@ -10,8 +10,7 @@
       idleRestartBtn = document.getElementById('idle-restart'),
       options = document.getElementById('options'),
       soundsBtn = document.getElementById('sounds-btn'),
-
-
+      afkIndicator = document.getElementById('afk'),
 
       // Init modules
       router = new SK.modules.Router('fr'),
@@ -134,7 +133,6 @@
       });
 
     router.on('sessionEnded', function () {
-        timer.clearIdle();
         timer.clearSession();
       });
 
@@ -147,6 +145,22 @@
     router.on('idleEnded', function () {
         timer.clearIdle();
       });
+
+    router.on('idle', function () {
+      afkIndicator.classList.add('shown');
+    });
+
+    router.on('active', function () {
+      afkIndicator.classList.remove('shown');
+    });
+
+    router.on('afk', function (message) {
+      timer.showIdle(message.value);
+    });
+
+    router.on('notAfk', function () {
+      timer.clearIdle();
+    });
   };
 
 
@@ -244,7 +258,8 @@
   SK.modules.Timer = function () {
     var sessionTimer = document.getElementById('session-timer'),
       idleTimer = document.getElementById('idle-timer'),
-      intervalId,
+      sessionIntervalId,
+      idleIntervalId,
       diff,
       mins,
       secs;
@@ -256,13 +271,13 @@
 
       sessionTimer.innerHTML = printTime(time);
 
-      intervalId = setInterval(function () {
+      sessionIntervalId = setInterval(function () {
         sessionTimer.innerHTML = printTime(time);
       }, 1000);
     }
 
     function clearSession () {
-      clearInterval(intervalId);
+      clearInterval(sessionIntervalId);
       sessionTimer.innerHTML = '00:00';
     }
 
@@ -272,20 +287,20 @@
     }
 
 
-    function showIdle () {
-      var time = +localStorage.getItem('idle.startDate');
+    function showIdle (date) {
+      var time = date || +localStorage.getItem('idle.startDate');
       if (!time) { return; }
 
       idleTimer.innerHTML = printTime(time);
 
-      intervalId = setInterval(function () {
+      idleIntervalId = setInterval(function () {
         idleTimer.innerHTML = printTime(time);
       }, 1000);
     }
 
 
     function clearIdle () {
-      clearInterval(intervalId);
+      clearInterval(idleIntervalId);
       idleTimer.innerHTML = '00:00';
     }
 

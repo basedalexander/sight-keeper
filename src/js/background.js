@@ -107,6 +107,7 @@
       audio.setVolume(1);
     });
 
+
     // Basic functionality
 
     //Checks 'state' value  when app has been loaded,
@@ -193,6 +194,8 @@
           startIdle();
           router.send('idleStarted');
         }
+
+        router.send('idle');
       }
 
 
@@ -224,6 +227,8 @@
           router.send('sessionStarted');
           console.log('session started since did input');
         }
+
+        router.send('active');
       }
     }
 
@@ -291,7 +296,7 @@
 
       session.timerId = setTimeout(function () {
 
-        if (!afk.timeoutId) {
+        if (!isAfk()) {
           notify.sessionEnded();
           audio.play(1);
         } else {
@@ -325,11 +330,11 @@
       // If session period finished while user is still afk - run idle
       // manually
       // @link https://developer.chrome.com/extensions/idle#method-queryState
-      if (afk.timeoutId) {
+      if (isAfk()) {
+        dontTrackAfk();
         startIdle();
         router.send('idleStarted');
         console.log('idle started manually');
-        dontTrackAfk();
       }
 
     }
@@ -386,6 +391,8 @@
       var t = idle.period.load();
       afk.startDate = Date.now();
 
+      router.send('afk', afk.startDate);
+
       afk.timeoutId = setTimeout(function () {
         dontTrackAfk();
         endSession();
@@ -396,14 +403,20 @@
     }
 
     function dontTrackAfk () {
+      router.send('notAfk');
       clearTimeout(afk.timeoutId);
       afk.timeoutId = null;
       afk.startDate = null;
     }
 
+    function isAfk () {
+      return !!afk.timeoutId;
+    }
+
     this.switchOn = switchOn;
     this.switchOff = switchOff;
 
+    // Checks app state, if it is on - then runs app
     switcher();
   };
 

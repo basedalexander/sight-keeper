@@ -168,7 +168,6 @@ button {
 }
 
 .timer {
-  display: inline-block;
   width: 40px;
   float: right;
   cursor: default;
@@ -179,6 +178,17 @@ button {
   width: 25px;
   color: rgba(0, 0, 0, .3);
   cursor: default;
+}
+
+.afk-state {
+  float: right;
+  margin: 0 20px;
+  font-weight: bold;
+  visibility: hidden;
+}
+
+.afk-state.shown {
+  visibility: visible;
 }
 
 /* checkbox btn*/
