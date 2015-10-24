@@ -56,6 +56,7 @@
 
     chrome.idle.setDetectionInterval(15);
 
+    // Pressed app switcher button
     router.on('state', function (message) {
         var st;
 
@@ -72,18 +73,20 @@
       }
     );
 
+    // Pressed the restart sesson button
     router.on('sessionRestart', function (message) {
         restartSession();
         return 1;
       }
     );
 
-    router.on('sessionIdle', function (message) {
-        restartIdle();
-        return 1;
-      }
-    );
+    //router.on('sessionIdle', function (message) {
+    //    restartIdle();
+    //    return 1;
+    //  }
+    //);
 
+    // Applying new session period
     router.on('session.period', function (message) {
       session.period.save(message.value);
 
@@ -95,14 +98,17 @@
       router.send('sessionStarted');
     });
 
+    // Applying new idle period
     router.on('idle.period', function (message) {
       idle.period.save(message.value);
     });
 
+    // Sounds turned off
     router.on('mute', function () {
       audio.setVolume(0);
     });
 
+    // Sounds turned on
     router.on('unmute', function () {
       audio.setVolume(1);
     });
@@ -156,6 +162,8 @@
       audio.stop();
       notify.closeAll();
     }
+
+
 
     // Main logic of application
     // Chrome idle state listener
@@ -243,9 +251,12 @@
     }
 
 
-    // Chrome notification button's handler
-    // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
+
+
     function btnListener (id, buttonIndex) {
+
+      // Chrome notification button's handler
+      // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
 
       // Close notification when user clicks any button
       chrome.notifications.clear(id, function () {});
@@ -286,7 +297,8 @@
       console.log('btn listener removed');
     }
 
-    // Starts session period
+
+
     function startSession (time) {
       var t = time || +session.period.load();
 
@@ -311,7 +323,6 @@
       }, t);
     }
 
-    // It called when session period elapsed
     function endSession () {
 
       // For cases when user was idling (was called trackAfk())
@@ -346,6 +357,8 @@
       startSession();
     }
 
+
+
     // Starts idle period
     function startIdle(time) {
       var t = time || +idle.period.load();
@@ -371,8 +384,6 @@
       idle.status.reset();
       idle.startDate.reset();
 
-      // Delete value due to idle endings
-      idle.timeLeft = null;
     }
 
     function pauseIdle () {
@@ -386,6 +397,8 @@
       endIdle();
       startIdle();
     }
+
+
 
     function trackAfk () {
       var t = idle.period.load();
@@ -412,6 +425,8 @@
     function isAfk () {
       return !!afk.timeoutId;
     }
+
+
 
     this.switchOn = switchOn;
     this.switchOff = switchOff;
@@ -569,8 +584,6 @@
     };
   };
 
-  // Desktop notifications (chrome.notifications API and
-  // web Notifications API)
   SK.modules.Notify = function () {
     console.info('Notify module');
 
@@ -668,7 +681,6 @@
     this.closeAll = closeAll;
   };
 
-  // Audio notifications
   SK.modules.Audio = function () {
     console.info('audio module');
 

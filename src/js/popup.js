@@ -177,9 +177,6 @@
 
   SK.modules = {};
 
-  // Creates an object that has methods for retrieving and
-  // setting value in localStorage to given key.
-
   SK.modules.Router = function (identifier) {
 
     // Unique identifier for current script
@@ -237,9 +234,6 @@
       return ms / 1000;
     };
   };
-
-  // Desktop notifications (chrome.notifications API and
-  // web Notifications API)
 
   // Audio notifications
   SK.modules.Audio = function () {
