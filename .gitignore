@@ -3,8 +3,8 @@
 .idea
 node_modules
 *.txt
-build/**/*.js
-build/**/*.map
+build/dev/js/*
+build/dev/css/*
 _SpecRunner.html
 .grunt
 *.*~
