@@ -1,0 +1,28 @@
+{
+  "manifest_version": 2,
+  "name": "Sight keeper",
+  "version": "1.0.0",
+
+  "description": "Prevents your eyes from overwork. For those who value their health.",
+  "icons": {
+     "128": "img/eye128.png",
+     "16": "img/eye16.png",
+     "48": "img/eye48.png"
+  },
+
+  "browser_action": {
+     "default_icon": "img/eye-icon-on-19.png",
+     "default_title": "Sight keeper",
+     "default_popup": "popup.html"
+  },
+  "background": {
+    "page": "background.html",
+    "persistent": true
+  },
+
+  "permissions": [
+    "idle",
+    "notifications",
+    "background"
+    ]
+}
