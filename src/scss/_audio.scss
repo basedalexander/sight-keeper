@@ -1,0 +1,25 @@
+// Audio settings
+.checkbox-btn {
+  width: 18px;
+  height: 18px;
+  line-height: 1em;
+  font-size: 1.5em;
+  margin: 10px 5px 0;
+  border: 1px solid rgba(0, 0, 0, 0.28);
+  -webkit-border-radius: 50%;
+  -moz-border-radius: 50%;
+  border-radius: 50%;
+  background-color: #5699CB;
+  cursor: pointer;
+  text-align: center;
+  color: #fff;
+  -webkit-transition: background-color .2s;
+  -moz-transition:  background-color .2s;
+  -ms-transition:  background-color .2s;
+  -o-transition:  background-color .2s;
+  transition:  background-color .2s;
+}
+
+.checkbox-btn.disabled {
+  background-color : #fff;
+}

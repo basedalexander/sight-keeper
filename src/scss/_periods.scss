@@ -1,0 +1,74 @@
+/* Periods section
+   ========================================================================= */
+
+.period-input {
+  display: inline-block;
+  width: 50px;
+  text-align: center;
+}
+.period-input:focus {
+  background: rgba(255, 247, 0, 0.14);
+  border-style: solid;
+  border-color: #ccc;
+}
+
+.period-name {
+  width: 40px;
+  display: inline-block;
+  cursor: default;
+}
+
+.period-restart-btn {
+  float: right;
+  cursor: pointer;
+  border: none;
+  height: 35px;
+  width: 25px;
+  background-color: transparent;
+}
+
+.period-restart-btn:focus {
+  outline: 0;
+}
+
+.period-restart-btn img {
+  display: block;
+}
+
+.period-input-btn {
+  font-size: 0.85em;
+  color: rgba(0, 0, 0, .3);
+}
+
+.period-input-btn.btn-hidden {
+  visibility: hidden;
+}
+
+.period-input-btn:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.timer {
+  width: 40px;
+  float: right;
+  cursor: default;
+}
+
+.idle-table {
+  float: right;
+  width: 25px;
+  color: rgba(0, 0, 0, .3);
+  cursor: default;
+}
+
+.afk-state {
+  float: right;
+  margin: 0 20px;
+  font-weight: bold;
+  visibility: hidden;
+}
+
+.afk-state.shown {
+  visibility: visible;
+}
