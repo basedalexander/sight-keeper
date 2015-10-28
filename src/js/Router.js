@@ -5,7 +5,8 @@ console.info('Router module');
 function Router (identifier) {
 
     // Unique identifier for current script
-    var id = identifier;
+    var id = identifier,
+        listeners = {};
 
     function send (name, value, cb) {
 
@@ -21,7 +22,7 @@ function Router (identifier) {
     function on (name, handler) {
 
         // Save handler in router object.
-        this[name] = function (message, sender, cb) {
+        listeners[name] = function (message, sender, cb) {
 
             // If message was send from another Router instance or
             // message name is not what we expecting then do nothing.
@@ -33,7 +34,7 @@ function Router (identifier) {
         };
 
         // @link https://developer.chrome.com/extensions/runtime#event-onMessage
-        chrome.runtime.onMessage.addListener(this[name]);
+        chrome.runtime.onMessage.addListener(listeners[name]);
     }
 
     this.send = send;
