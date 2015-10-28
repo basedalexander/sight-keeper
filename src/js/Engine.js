@@ -200,8 +200,8 @@ function rmBtnListener() {
 function startSession(time) {
     var t = time || +session.period.load();
 
-    session.status.save('running');
-    session.startDate.save(Date.now());
+    session.setStatus('running');
+    session.setStartDate(Date.now());
 
     session.timerId = setTimeout(function () {
 

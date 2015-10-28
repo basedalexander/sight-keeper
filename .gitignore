@@ -7,3 +7,4 @@ _SpecRunner.html
 .grunt
 *.*~
 *.swp
+build/dev/js
