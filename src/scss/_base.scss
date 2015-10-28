@@ -1,0 +1,27 @@
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  width: $popup-width;
+  height: $popup-height;
+  font-family: 'Helvetica', sans-serif;
+  font-size: $base-font-size;
+}
+
+button {
+  padding: 0;
+}
