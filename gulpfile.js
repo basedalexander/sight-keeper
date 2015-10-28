@@ -6,6 +6,7 @@ var rename = require('gulp-rename');
 
 // Build Dependencies
 var browserify = require('browserify');
+var sass = require('gulp-sass');
 var source = require('vinyl-source-stream');
 var buffer = require('vinyl-buffer');
 
@@ -47,6 +48,15 @@ var test = {
     },
     devDest: 'build/dev/js/',
     html: 'test/index.html'
+};
+
+var scss = {
+    input : 'src/scss/**/*.scss',
+    output: 'build/dev/css',
+    options: {
+        errLogToConsole: true,
+        outputStyle: 'expanded'
+    }
 };
 
 
@@ -96,7 +106,14 @@ gulp.task('browserify-test', ['lint-test'], function () {
     .pipe(gulp.dest(test.devDest));
 });
 
-
+// Sass
+gulp.task('sass', function () {
+   return gulp.src(scss.input)
+       .pipe(sourcemaps.init())
+       .pipe(sass(scss.options)).on('error', sass.logError)
+       .pipe(sourcemaps.write())
+       .pipe(gulp.dest(scss.output));
+});
 
 // Test
 gulp.task('test', ['lint-test', 'browserify-test'], function () {
@@ -108,6 +125,7 @@ gulp.task('test', ['lint-test', 'browserify-test'], function () {
 gulp.task('watch', function () {
     gulp.watch('src/**/*.js', ['lint-src', 'browserify-src', 'browserify-test','test']);
     gulp.watch('test/*.js', ['lint-test','lint-src', 'browserify-test', 'test']);
+    gulp.watch('src/**/*.scss', ['sass']);
 });
 
 
