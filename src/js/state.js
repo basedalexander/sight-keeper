@@ -1,3 +1,5 @@
+'use strict';
+
 var Static = require('./Static.js');
 
 var state = new Static('state', 'on');

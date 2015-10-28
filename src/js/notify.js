@@ -6,7 +6,7 @@ console.info('Notify module');
 
 var sessionOpts = {
         type: 'basic',
-        iconUrl: '../img/eye128.jpg', // '../img/eyes_tired2.png'
+        iconUrl: '../img/eye128.jpg',
         title: 'Take a break!',
         message: 'Do not touch the computer whole the rest period',
         contextMessage: 'Sight keeper ',
@@ -35,10 +35,10 @@ var sessionOpts = {
 
     idleEndedOpts = {
         body: 'Now you can proceed',
-        icon: '../img/eye48.png' // '../img/gj.png'
+        icon: '../img/eye48.png'
     },
 
-// Stores Notification instance
+    // Stores Notification instance
     notifIldeInded;
 
 

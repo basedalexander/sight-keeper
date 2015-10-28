@@ -2,6 +2,10 @@
 
 console.info('Router module');
 
+
+module.exports = Router;
+
+
 function Router (identifier) {
 
     // Unique identifier for current script
@@ -42,4 +46,3 @@ function Router (identifier) {
 }
 
 
-module.exports = Router;
