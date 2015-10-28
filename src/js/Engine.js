@@ -2,7 +2,7 @@
 
 console.info('Engine module');
 
-var Static = require('./Static.js'),
+var state  = require('./state.js'),
     Period = require('./Period.js'),
     Router = require('./Router.js'),
     badger = require('./badger.js'),
@@ -10,8 +10,7 @@ var Static = require('./Static.js'),
     notify = require('./notify.js'),
     audio  = require('./audio.js');
 
-var state = new Static('state', 'on'),
-    session = new Period('session', '60000'),
+var session = new Period('session', '60000'),
     idle = new Period('idle', '30000'),
     router = new Router('backend'),
 
@@ -25,7 +24,7 @@ chrome.idle.setDetectionInterval(15);
 function switcher() {
 
     // If app is on , then run it.
-    if (state.load() === 'on') {
+    if (state.isOn()) {
         switchOn();
     } else {
 
@@ -43,15 +42,15 @@ function switchOn() {
     router.send('sessionStarted');
     badger.enableIcon();
 
-    console.log('session started , period : ' + session.period.load());
+    console.log('session started , period : ' + session.getPeriod());
 }
 
 function switchOff() {
     console.log('SK is OFF');
 
-    state.save('off');
+    state.setOff();
 
-    if (afk.timeoutId) {
+    if (isAfk()) {
         dontTrackAfk();
     }
 
@@ -75,7 +74,7 @@ function idleListener(idleState) {
         idlePaused = idle.isPaused();
 
     // If app state is 'off' - ignore
-    if (state.load() === 'off') {
+    if (!state.isOn()) {
         return;
     }
 
@@ -95,7 +94,7 @@ function idleListener(idleState) {
         if (!sessionRunning && !idleRunning) {
             startIdle();
             router.send('idleStarted');
-            console.log('idle started , period : ' + idle.period.load());
+            console.log('idle started , period : ' + idle.getPeriod());
         }
 
         if (idlePaused) {
@@ -324,32 +323,29 @@ function isAfk() {
 function Engine () {
 
     // Pressed app switcher button
-    router.on('state', function (message) {
-            if (!message.value) {
-                return state.load();
-            }
+    router.on('setStateOn', function () {
+            state.setOn();
+            switchOn();
+        }
+    );
 
-            // Set this value to localStorage
-            state.save(message.value);
-
-            // Then execute the main function
-            switcher();
+    router.on('setStateOff', function () {
+            state.setOff();
+            switchOff();
         }
     );
 
     // Pressed the restart sesson button
-    router.on('sessionRestart', function (message) {
+    router.on('restartSession', function () {
             restartSession();
-            return 1;
         }
     );
 
     // Applying new session period
-    router.on('session.period', function (message) {
+    router.on('setSessionPeriod', function (message) {
         session.setPeriod(message.value);
 
         endSession();
-        router.send('sessionEnded');
         endIdle();
         router.send('idleInded');
         startSession();
@@ -357,7 +353,7 @@ function Engine () {
     });
 
     // Applying new idle period
-    router.on('idle.period', function (message) {
+    router.on('setIdlePeriod', function (message) {
         idle.setPeriod(message.value);
     });
 
@@ -380,5 +376,6 @@ function Engine () {
 
     switcher();
 }
+
 
 module.exports = Engine;
