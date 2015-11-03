@@ -39,7 +39,7 @@ var sessionOpts = {
     },
 
     // Stores Notification instance
-    notifIldeInded;
+    notifyIdleEnded;
 
 
 function sessionEnded () {
@@ -60,13 +60,13 @@ function sessionEnded () {
 // notification showed untill user make any imput.
 // @link https://developer.mozilla.org/en-US/docs/Web/API/notification
 function idleEnded () {
-    notifIldeInded = new Notification('Good job!', idleEndedOpts);
+    notifyIdleEnded = new Notification('Good job!', idleEndedOpts);
 }
 
 function closeIdleEnded () {
-    if (notifIldeInded) {
-        notifIldeInded.close();
-        notifIldeInded = null;
+    if (notifyIdleEnded) {
+        notifyIdleEnded.close();
+        notifyIdleEnded = null;
     }
 }
 

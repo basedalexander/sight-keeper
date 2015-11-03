@@ -2,6 +2,8 @@
 
 var Static = require('./Static.js');
 
+console.info('status module');
+
 var state = new Static('state', 'on');
 
 function get () {

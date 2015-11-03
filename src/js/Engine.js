@@ -22,13 +22,9 @@ var session = new Period('session', '60000'),
 chrome.idle.setDetectionInterval(15);
 
 function switcher() {
-
-    // If app is on , then run it.
     if (state.isOn()) {
         switchOn();
     } else {
-
-        // If it is 'off' then just change browserAction
         switchOff();
     }
 }
@@ -46,7 +42,7 @@ function switchOn() {
 }
 
 function switchOff() {
-    console.log('SK is OFF');
+    console.info('SK is OFF');
 
     state.setOff();
 
@@ -169,7 +165,7 @@ function btnListener(id, buttonIndex) {
             // TODO make this value configurable.
             // get rid of hardcode
             startSession(5 * 60000);
-            console.log('session started , reminder, period : ' + utils.ms2min(5 * 60000) + ' min');
+            console.log('session started , reminder, period : 5 mins');
         }
     }
 
@@ -197,13 +193,12 @@ function rmBtnListener() {
 
 
 function startSession(time) {
-    var t = time || +session.period.load();
+    var t = time || +session.getPeriod();
 
     session.setStatus('running');
     session.setStartDate(Date.now());
 
     session.timerId = setTimeout(function () {
-
         if (!isAfk()) {
             notify.sessionEnded();
             audio.play(1);
@@ -212,10 +207,7 @@ function startSession(time) {
         }
 
         endSession();
-
-
         console.log('session ended');
-
     }, t);
 }
 
@@ -251,6 +243,7 @@ function restartSession() {
     notify.closeAll();
     endSession();
     startSession();
+    router.send('sessionStarted');
 }
 
 
@@ -295,7 +288,7 @@ function restartIdle() {
 
 
 function trackAfk() {
-    var t = idle.period.load();
+    var t = idle.getPeriod();
     afk.startDate = Date.now();
 
     router.send('afk', afk.startDate);
@@ -321,6 +314,8 @@ function isAfk() {
 }
 
 function Engine () {
+    // Initialize app
+    switcher();
 
     // Pressed app switcher button
     router.on('setStateOn', function () {
@@ -338,6 +333,7 @@ function Engine () {
     // Pressed the restart sesson button
     router.on('restartSession', function () {
             restartSession();
+            return session.getStartDate();
         }
     );
 
@@ -367,14 +363,10 @@ function Engine () {
         audio.setVolume(1);
     });
 
-    //Checks 'state' value  when app has been loaded,
-    // and does things depending on received value.
-
 
     this.switchOn = switchOn;
     this.switchOff = switchOff;
 
-    switcher();
 }
 
 

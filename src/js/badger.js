@@ -10,13 +10,13 @@ exports.disableIcon = disableIcon;
 // @link https://developer.chrome.com/extensions/browserAction#method-setIcon
 function disableIcon () {
     chrome.browserAction.setIcon({
-        path: '../img/eye-icon-off-19.png' // '../img/popup-icon-off-19.png'
+        path: '../img/eye-icon-off-19.png'
     }, function () {});
 }
 
 function enableIcon () {
     chrome.browserAction.setIcon({
-        path: '../img/eye-icon-on-19.png' // '../img/popup-icon-on-19.png'
+        path: '../img/eye-icon-on-19.png'
     }, function () {});
 }
 

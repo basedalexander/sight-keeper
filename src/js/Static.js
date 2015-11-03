@@ -2,25 +2,40 @@
 
 console.info('Static module');
 
-
-function createClass(target, props) {
-    var key,
-        prop;
-
-    for (key in props) {
-        if ( props.hasOwnProperty(key)) {
-            prop = props[key];
-
-            // @link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperties
-            prop.configurable = true;
-            prop.writable = true;
+var _createClass = (function () {
+    function defineProperties(target, props) {
+        var key, prop;
+        for (key in props) {
+            if (props.hasOwnProperty(key)) {
+                prop = props[key];
+                prop.configurable = true;
+                if (prop.value) {
+                    prop.writable = true;
+                }
+            }
         }
-
+        Object.defineProperties(target, props);
     }
-    Object.defineProperties(target.prototype, props);
-}
+    return function (Constructor, protoProps, staticProps) {
+        if (protoProps) {
+            defineProperties(Constructor.prototype, protoProps);
+        }
+        if (staticProps) {
+            defineProperties(Constructor, staticProps);
+        }
+        return Constructor;
+    };
+})();
+
+var _classCallCheck = function (instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+};
 
 function Static (name, defaultValue) {
+
+    _classCallCheck(this, Static);
 
     // Key for localStorage
     this.name = name;
@@ -30,23 +45,23 @@ function Static (name, defaultValue) {
     // or just for reset purposes.
     this.defaultValue = defaultValue;
 
-    // Initially load value from localStorage
+    // Initialize value
     this.load();
 }
 
 
-createClass(Static, {
-
-    // Sets value to defaultValue and returns it
+_createClass(Static, {
     reset: {
+
+        // Sets value to defaultValue and returns it
         value: function reset() {
             return this.save(this.defaultValue);
         }
     },
-
-    // Loads value from localStorage and returns it,
-    // If there are problems - calls reset method.
     load: {
+
+        // Loads value from localStorage and returns it,
+        // If there are problems - calls reset method.
         value: function load() {
             var value = window.localStorage.getItem(this.name);
 
@@ -57,13 +72,12 @@ createClass(Static, {
 
             // Otherwise reset it to defaultValue
             //console.log("can't obtain the value ", this.name, 'reset to default value');
-
             return this.reset();
         }
     },
 
-    // Sets value and returns it
     save: {
+        // Sets value and returns it
         value: function save(value) {
             window.localStorage.setItem(this.name, value);
 

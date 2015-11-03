@@ -41,8 +41,16 @@ function Router (identifier) {
         chrome.runtime.onMessage.addListener(listeners[name]);
     }
 
+    function deregister (name) {
+        if (name in listeners) {
+            chrome.runtime.onMessage.removeListener(listeners[name]);
+            delete listeners[name];
+        }
+    }
+
     this.send = send;
     this.on = on;
+    this.deregister = deregister;
 }
 
 
