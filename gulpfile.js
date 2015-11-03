@@ -142,8 +142,13 @@ gulp.task('sass', function () {
 // Test
 gulp.task('test', ['lint-test', 'browserify-test'], function () {
      return gulp.src(test.html)
-    .pipe(mochaPhantomjs())
-    .on('error', function (){})
+    .pipe(mochaPhantomjs({
+             reporter: 'dot',
+             phantomjs: {
+                useColors: true
+                }
+         }))
+    .on('error', gutil.log);
 });
 
 gulp.task('watch', function () {
