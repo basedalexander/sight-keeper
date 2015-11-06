@@ -1,0 +1,4 @@
+.idea
+build/dev/css
+build/dev/js
+node_modules
