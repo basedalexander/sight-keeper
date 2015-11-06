@@ -4,21 +4,21 @@ var sessionTimer = document.getElementById('session-timer'),
     idleIntervalId,
     diff,
     mins,
-    secs;
+    secs,
+    storage = window.localStorage;
 
 
 function showSession () {
-    router.send('getSessionStartDate', null , function (response) {
-        if (!response) {
-            return;
-        }
+    var value = storage.getItem('session.startDate');
 
-        sessionTimer.innerHTML = printTime(response);
+    if (!value) {
+        return;
+    }
 
-        sessionIntervalId = setInterval(function () {
-            sessionTimer.innerHTML = printTime(response);
-        }, 1000);
-    });
+    sessionTimer.innerHTML = printTime(value);
+    sessionIntervalId = setInterval(function () {
+        sessionTimer.innerHTML = printTime(value);
+    }, 1000);
 }
 
 function clearSession () {
@@ -31,19 +31,17 @@ function restartSession () {
     showSession();
 }
 
+function showIdle (value) {
 
-function showIdle () {
-    router.send('getIdleStartDate', null, function (response) {
-        if (!response) {
-            return;
-        }
+    if (!value) {
+        return;
+    }
 
-        idleTimer.innerHTML = printTime(response);
+    idleTimer.innerHTML = printTime(value);
 
-        idleIntervalId = setInterval(function () {
-            idleTimer.innerHTML = printTime(response);
-        }, 1000);
-    });
+    idleIntervalId = setInterval(function () {
+        idleTimer.innerHTML = printTime(value);
+    }, 1000);
 }
 
 function clearIdle () {

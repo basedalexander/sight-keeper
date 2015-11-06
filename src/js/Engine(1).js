@@ -38,8 +38,7 @@ var state  = require('./state'),
     utils  = require('./utils'),
     notify = require('./notify'),
     audio  = require('./audio'),
-    router = new Router('backend'),
-    self;
+    router = new Router('backend');
 
 console.info('Engine module');
 
@@ -47,7 +46,7 @@ console.info('Engine module');
 
 var Engine = (function () {
 
-    // var self;
+     var self;
 
     function Engine() {
         _classCallCheck(this, Engine);
@@ -311,7 +310,7 @@ var Engine = (function () {
                 this._session.setStatus('running');
                 this._session.setStartDate(Date.now());
 
-                this._session.timerId = setTimeout(function () {
+                this._session.timeoutId = setTimeout(function () {
                     if (!self.isAfk()) {
                         notify.sessionEnded();
                         audio.play(1);
@@ -371,7 +370,7 @@ var Engine = (function () {
                 this._idle.setStatus('running');
                 this._idle.setStartDate(Date.now());
 
-                this._idle.timerId = setTimeout(function () {
+                this._idle.timeoutId = setTimeout(function () {
                     self.endIdle();
                     console.log('idle ended');
 
@@ -385,8 +384,8 @@ var Engine = (function () {
         endIdle: {
             value: function endIdle() {
 
-                clearTimeout(this._idle.timerId);
-                this._idle.timerId = null;
+                clearTimeout(this._idle.timeoutId);
+                this._idle.timeoutId = null;
 
                 this._idle.resetStatus();
                 this._idle.resetStartDate();

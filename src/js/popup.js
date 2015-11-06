@@ -1,335 +1,193 @@
-(function (window, document) {
-  'use strict';
-  var SK = function () {
-    var switcherBtn = document.getElementById('btn'),
-      sessionInput = document.getElementById('session-input'),
-      idleInput = document.getElementById('idle-input'),
-      sessionInputBtn = document.getElementById('session-apply-btn'),
-      idleInputBtn = document.getElementById('idle-apply-btn'),
-      sessionRestartBtn = document.getElementById('session-restart'),
-      idleRestartBtn = document.getElementById('idle-restart'),
-      options = document.getElementById('options'),
-      soundsBtn = document.getElementById('sounds-btn'),
-      afkIndicator = document.getElementById('afk'),
+'use strict';
 
-      // Init modules
-      router = new SK.modules.Router('fr'),
-      utils = new SK.modules.Utils(),
-      audio = new SK.modules.Audio(),
-      timer = new SK.modules.Timer();
+//todo timer doesn't work properly
+var switcherBtn = document.getElementById('btn'),
+  options = document.getElementById('options'),
 
-      (function init() {
-        var state = localStorage.getItem('state'),
-          sessionPeriod = localStorage.getItem('session.period'),
-          idlePeriod = localStorage.getItem('idle.period'),
-          sounds = +localStorage.getItem('volume');
+  sessionInput = document.getElementById('session-input'),
+  sessionInputBtn = document.getElementById('session-apply-btn'),
+  sessionRestartBtn = document.getElementById('session-restart'),
 
-        if (state === 'on') {
-          switcherBtn.classList.add('btn-active');
-          timer.showSession();
-         } else {
-          switcherBtn.classList.remove('btn-active');
-          options.classList.add('options-disabled');
-        }
+  idleInput = document.getElementById('idle-input'),
+  idleInputBtn = document.getElementById('idle-apply-btn'),
+  afkIndicator = document.getElementById('afk'),
 
-        if (!sounds) {
-          soundsBtn.classList.add('disabled');
-        } else {
-          soundsBtn.classList.remove('disabled');
-        }
+  soundsBtn = document.getElementById('sounds-btn'),
 
-        sessionInput.value = utils.ms2min(sessionPeriod);
-        idleInput.value = utils.ms2min(idlePeriod);
+  // Init modules
+  Router = require('./Router.js'),
+  utils = require('./utils.js'),
+  audio = require('./audio.js'),
+  timer = require('./options_periods'),
+  router = new Router('frontend');
 
-      })();
 
-    switcherBtn.addEventListener('click', function(e) {
-        if (this.classList.contains('btn-active')) {
 
-          this.classList.remove("btn-active");
-          options.classList.add('options-disabled');
-          router.send('setStateOff', null,  function () {} );
 
-        } else {
-          this.classList.add("btn-active");
-          options.classList.remove('options-disabled');
-          router.send('setStateOn', null , function () {
-          } );
-        }
+  (function init() {
+    var state = window.localStorage.getItem('state'),
+      sessionPeriod = window.localStorage.getItem('session.period'),
+      idlePeriod = window.localStorage.getItem('idle.period'),
+      sounds = +window.localStorage.getItem('volume');
 
-      });
+    if (state === 'on') {
+      switcherBtn.classList.add('app-btn-active');
+      timer.showSession();
+    } else {
+      switcherBtn.classList.remove('app-btn-active');
+      options.classList.add('options-disabled');
+    }
 
-    sessionRestartBtn.addEventListener('click', function () {
-        timer.clearSession();
-        router.send('restartSession', null, function (answer) {
-            timer.showSession();
-        });
-      });
 
-    sessionInput.addEventListener('input', function (e) {
-        sessionInputBtn.classList.remove('btn-hidden');
-      });
+    if (!sounds) {
+      soundsBtn.classList.add('disabled');
+    } else {
+      soundsBtn.classList.remove('disabled');
+    }
 
-    sessionInputBtn.addEventListener('click', function () {
-        var value = +sessionInput.value,
-            min = sessionInput.min,
-            max = sessionInput.max;
+    sessionInput.value = utils.ms2min(sessionPeriod);
+    idleInput.value = utils.ms2min(idlePeriod);
 
-        if (!value || value < 0) {
-          sessionInput.value = min;
-          return;
-        }
+  })();
 
-        if (value < min) {sessionInput.value = value = min; }
-        if (value > max) { sessionInput.value = value = max; }
+  switcherBtn.addEventListener('click', function (e) {
+    if (this.classList.contains('app-btn-active')) {
 
-        value = utils.min2ms(value);
-        this.classList.add('btn-hidden');
+      this.classList.remove("app-btn-active");
+      options.classList.add('options-disabled');
+      router.send('setStateOff', null, function () {});
 
-        router.send('setSessionPeriod', value, function () {
-        });
+    } else {
+      this.classList.add("app-btn-active");
+      options.classList.remove('options-disabled');
+      router.send('setStateOn', null, function () {});
+    }
 
-      });
+  });
 
-    idleInput.addEventListener('input', function (e) {
-      idleInputBtn.classList.remove('btn-hidden');
+
+  sessionRestartBtn.addEventListener('click', function () {
+    timer.clearSession();
+    router.send('restartSession', null, function (response) {
+      timer.showSession(response);
     });
+  });
 
-    idleInputBtn.addEventListener('click', function () {
-      var value = +idleInput.value,
-          min = idleInput.min,
-          max = idleInput.max;
+  sessionInput.addEventListener('input', function (e) {
+    sessionInputBtn.classList.remove('btn-hidden');
+  });
 
-      if (!value || value < 0) {
-        idleInput.value = min;
-        return;
-      }
+  sessionInputBtn.addEventListener('click', function () {
+    var value = +sessionInput.value,
+      min = sessionInput.min,
+      max = sessionInput.max;
 
-      if (value < min) { idleInput.value = value = min; }
-      if (value > max) { idleInput.value = value = max; }
-
-      value = utils.min2ms(value);
-      this.classList.add('btn-hidden');
-
-      router.send('setIdlePeriod', value, function () {});
-
-    });
-
-    soundsBtn.addEventListener('click', function (e) {
-      var value = +localStorage.getItem('volume');
-      if (!value) {
-        router.send('unmute');
-        this.classList.remove('disabled');
-      } else {
-        router.send('mute');
-        this.classList.add('disabled');
-      }
-
-
-    });
-
-    options.addEventListener('selectstart', function (e) {
-      e.preventDefault();
-    });
-
-    router.on('sessionStarted', function () {
-        timer.clearIdle();
-        timer.clearSession();
-        timer.showSession();
-      });
-
-    router.on('sessionEnded', function () {
-        timer.clearSession();
-      });
-
-    router.on('idleStarted', function () {
-       timer.clearSession();
-        timer.clearIdle();
-        timer.showIdle();
-      });
-
-    router.on('idleEnded', function () {
-        timer.clearIdle();
-      });
-
-    router.on('idle', function () {
-      afkIndicator.classList.add('shown');
-    });
-
-    router.on('active', function () {
-      afkIndicator.classList.remove('shown');
-    });
-
-    router.on('afk', function (message) {
-      timer.showIdle(message.value);
-    });
-
-    router.on('notAfk', function () {
-      timer.clearIdle();
-    });
-  };
-
-
-  SK.modules = {};
-
-  SK.modules.Router = function (identifier) {
-
-    // Unique identifier for current script
-    var id = identifier;
-
-    function send (name, value, cb) {
-
-      // @link https://developer.chrome.com/extensions/runtime#method-sendMessage
-      chrome.runtime.sendMessage({
-          id: id,
-          name: name,
-          value: value
-        },
-      cb);
+    if (!value || value < 0) {
+      sessionInput.value = min;
+      return;
     }
 
-    function on (name, handler) {
-
-      // Save handler in router object.
-      this[name] = function (message, sender, cb) {
-
-        // If message was send from another Router instance or
-        // message name is not what we expecting then do nothing.
-        if (message.id !== id && message.name === name) {
-
-          // Handle message
-          cb(handler(message));
-        }
-      };
-
-      // @link https://developer.chrome.com/extensions/runtime#event-onMessage
-      chrome.runtime.onMessage.addListener(this[name]);
+    if (value < min) {
+      sessionInput.value = value = min;
+    }
+    if (value > max) {
+      sessionInput.value = value = max;
     }
 
-    this.send = send;
-    this.on = on;
-  };
+    value = utils.min2ms(value);
+    this.classList.add('btn-hidden');
 
-  SK.modules.Utils = function () {
-    console.info('converter module');
+    router.send('setSessionPeriod', value, function () {});
 
-    this.ms2min = function (ms) {
-      return +(ms / 60000).toFixed(1);
-    };
+  });
 
-    this.min2ms = function (mins) {
-      return mins * 60000;
-    };
 
-    this.sec2ms = function (sec) {
-      return sec * 1000;
-    };
 
-    this.ms2sec = function (ms) {
-      return ms / 1000;
-    };
-  };
+  idleInput.addEventListener('input', function (e) {
+    idleInputBtn.classList.remove('btn-hidden');
+  });
 
-  // Audio notifications
-  SK.modules.Audio = function () {
-    console.info('audio module');
+  idleInputBtn.addEventListener('click', function () {
+    var value = +idleInput.value,
+      min = idleInput.min,
+      max = idleInput.max;
 
-    // dependency
-    var Static = SK.modules.Static,
-      audio = new Audio('');
-
-    // Plays audio file with given index,
-    // get's volume from localStorage (user preference)
-    function play (index) {
-      audio.src = 'audio/' + index + '.ogg';
-      audio.play();
+    if (!value || value < 0) {
+      idleInput.value = min;
+      return;
     }
 
-    function stop () {
-      audio.src = '';
+    if (value < min) {
+      idleInput.value = value = min;
+    }
+    if (value > max) {
+      idleInput.value = value = max;
     }
 
-    document.body.appendChild(audio);
+    value = utils.min2ms(value);
+    this.classList.add('btn-hidden');
 
-    this.play = play;
-    this.stop = stop;
-  };
+    router.send('setIdlePeriod', value, function () {});
 
-  SK.modules.Timer = function () {
-    var sessionTimer = document.getElementById('session-timer'),
-      idleTimer = document.getElementById('idle-timer'),
-      sessionIntervalId,
-      idleIntervalId,
-      diff,
-      mins,
-      secs;
+  });
 
 
-    function showSession () {
-      var time = +localStorage.getItem('session.startDate');
-      if (!time) { return; }
 
-      sessionTimer.innerHTML = printTime(time);
-
-      sessionIntervalId = setInterval(function () {
-        sessionTimer.innerHTML = printTime(time);
-      }, 1000);
-    }
-
-    function clearSession () {
-      clearInterval(sessionIntervalId);
-      sessionTimer.innerHTML = '00:00';
-    }
-
-    function restartSession () {
-      clearSession();
-      showSession();
+  soundsBtn.addEventListener('click', function (e) {
+    var value = +window.localStorage.getItem('volume');
+    if (!value) {
+      router.send('unmute');
+      this.classList.remove('disabled');
+    } else {
+      router.send('mute');
+      this.classList.add('disabled');
     }
 
 
-    function showIdle (date) {
-      var time = date || +localStorage.getItem('idle.startDate');
-      if (!time) { return; }
+  });
 
-      idleTimer.innerHTML = printTime(time);
-
-      idleIntervalId = setInterval(function () {
-        idleTimer.innerHTML = printTime(time);
-      }, 1000);
-    }
+  options.addEventListener('selectstart', function (e) {
+    e.preventDefault();
+  });
 
 
-    function clearIdle () {
-      clearInterval(idleIntervalId);
-      idleTimer.innerHTML = '00:00';
-    }
+
+  router.on('sessionStarted', function () {
+    timer.clearIdle();
+    timer.clearSession();
+    timer.showSession();
+  });
+
+  router.on('sessionEnded', function () {
+    timer.clearSession();
+  });
 
 
-    function restartIdle () {
-      clearIdle();
-      showIdle();
-    }
+  router.on('idleStarted', function () {
+    timer.clearSession();
+    timer.clearIdle();
+    timer.showIdle();
+  });
 
-    function printTime (time) {
-      diff = new Date(Date.now() - time);
-
-      mins = diff.getMinutes();
-      if (mins < 10) { mins = '0' + mins; }
-      secs = diff.getSeconds();
-      if (secs < 10) { secs = '0' + secs; }
-
-      return mins + ':' + secs;
-    }
-
-    this.showSession = showSession;
-    this.clearSession = clearSession;
-    this.showIdle = showIdle;
-    this.clearIdle = clearIdle;
-    this.restartSession = restartSession;
-    this.restartIdle = restartIdle;
-  };
+  router.on('idleEnded', function () {
+    timer.clearIdle();
+  });
 
 
-  window.sk = new SK();
-})(window, window.document);
+  router.on('idle', function () {
+    afkIndicator.classList.add('shown');
+  });
+
+  router.on('active', function () {
+    afkIndicator.classList.remove('shown');
+  });
+
+
+  router.on('afk', function (message) {
+    timer.showIdle(message.value);
+  });
+
+  router.on('notAfk', function () {
+    timer.clearIdle();
+  });
 
