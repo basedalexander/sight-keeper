@@ -186,10 +186,6 @@ var Engine = (function () {
           if (!sessionRunning && !idleRunning) {
             self.startIdle();
           }
-          //
-          //if (idlePaused) {
-          //  self.startIdle();
-          //}
 
           router.send('idle');
         }

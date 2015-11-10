@@ -26,148 +26,139 @@ var uglify = require('gulp-uglify');
 // Setup
 /******************************************************************************/
 
-var bg = {
-    src : ['src/js/bg.js'],
-    devName: 'background-bundle.js',
-    devOpts: {
-        entries: ['src/js/bg.js'],
-        debug: true
-    },
-    devDest: 'build/dev/js/',
-    prodName: 'background.js',
-    prodDest: 'dist/js/'
+var background = {
+  src: ['src/js/background.js'],
+  devName: 'background-bundle.js',
+  devOpts: {
+    entries: ['src/js/background.js'],
+    debug: true
+  },
+  devDest: 'build/dev/js/',
+  prodName: 'background.js',
+  prodDest: 'dist/js/'
 
 };
 
 var popup = {
-    src: ['src/js/popup.js'],
-    devName: 'popup-bundle.js',
-    devOpts: {
-        entries: ['src/js/popup.js'],
-        debug: true
-    },
-    devDest: 'build/dev/js/',
-    prodName: 'popup.js',
-    prodDest: 'dist/js/'
+  src: ['src/js/popup.js'],
+  devName: 'popup-bundle.js',
+  devOpts: {
+    entries: ['src/js/popup.js'],
+    debug: true
+  },
+  devDest: 'build/dev/js/',
+  prodName: 'popup.js',
+  prodDest: 'dist/js/'
 };
 
 
 var test = {
-    src : ['test/index.js'],
-    devName: 'test-bundle.js',
-    devOpts: {
-        entries: ['test/index.js'],
-        debug: true
-    },
-    devDest: 'build/dev/js/',
-    html: 'test/index.html'
+  src: ['test/index.js'],
+  devName: 'test-bundle.js',
+  devOpts: {
+    entries: ['test/index.js'],
+    debug: true
+  },
+  devDest: 'build/dev/js/',
+  html: 'test/index.html'
 };
 
 var scss = {
-    input : 'src/scss/**/*.scss',
-    output: 'build/dev/css',
-    options: {
-        errLogToConsole: true,
-        outputStyle: 'expanded'
-    }
+  input: 'src/scss/**/*.scss',
+  output: 'build/dev/css',
+  options: {
+    errLogToConsole: true,
+    outputStyle: 'expanded'
+  }
 };
 
 
 var browserifyOnError = function (err) {
-    gutil.log(gutil.colors.red('browserify task ' + err.name + ': ' + err.message));
-    this.emit('end');
+  gutil.log(gutil.colors.red('browserify task ' + err.name + ': ' + err.message));
+  this.emit('end');
 };
-
 
 
 // Tasks
 /****************************************************************************/
+
 // Lint
 gulp.task('lint-src', function () {
-     return gulp.src('src/**/*.js')
+  return gulp.src('src/**/*.js')
     .pipe(jshint())
     .pipe(jshint.reporter('default'));
 });
 
 gulp.task('lint-test', function () {
-     return gulp.src('test/**/*.js')
+  return gulp.src('test/**/*.js')
     .pipe(jshint())
     .pipe(jshint.reporter('default'));
 });
 
 
 // Browserify
-gulp.task('browserify-bg', ['lint-src'], function () {
-     return browserify(bg.devOpts)
+gulp.task('browserify-background', ['lint-src'], function () {
+  return browserify(background.devOpts)
     .bundle()
     .on('error', browserifyOnError)
-    .pipe(source(bg.devName))
+    .pipe(source(background.devName))
     .pipe(buffer())
-    .pipe(sourcemaps.init({ loadMaps: true }))
+    .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(sourcemaps.write('./'))
-    .pipe(gulp.dest(bg.devDest));
+    .pipe(gulp.dest(background.devDest));
 });
 
 gulp.task('browserify-popup', ['lint-src'], function () {
-    return browserify(popup.devOpts)
-        .bundle()
-        .on('error', browserifyOnError)
-        .pipe(source(popup.devName))
-        .pipe(buffer())
-        .pipe(sourcemaps.init({ loadMaps: true }))
-        .pipe(sourcemaps.write('./'))
-        .pipe(gulp.dest(popup.devDest));
+  return browserify(popup.devOpts)
+    .bundle()
+    .on('error', browserifyOnError)
+    .pipe(source(popup.devName))
+    .pipe(buffer())
+    .pipe(sourcemaps.init({loadMaps: true}))
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(popup.devDest));
 });
 
 gulp.task('browserify-test', ['lint-test'], function () {
-     return browserify(test.devOpts)
+  return browserify(test.devOpts)
     .bundle()
     .on('error', browserifyOnError)
     .pipe(source(test.devName))
     .pipe(buffer())
-    .pipe(sourcemaps.init({ loadMaps: true }))
+    .pipe(sourcemaps.init({loadMaps: true}))
     .pipe(sourcemaps.write('./'))
     .pipe(gulp.dest(test.devDest));
 });
 
 // Sass
 gulp.task('sass', function () {
-   return gulp.src(scss.input)
-       .pipe(sourcemaps.init())
-       .pipe(sass(scss.options)).on('error', sass.logError)
-       .pipe(sourcemaps.write())
-       .pipe(gulp.dest(scss.output));
+  return gulp.src(scss.input)
+    .pipe(sourcemaps.init())
+    .pipe(sass(scss.options)).on('error', sass.logError)
+    .pipe(sourcemaps.write('./'))
+    .pipe(gulp.dest(scss.output));
 });
 
 // Test
 gulp.task('test', ['lint-test', 'browserify-test'], function () {
-     return gulp.src(test.html)
+  return gulp.src(test.html)
     .pipe(mochaPhantomjs({
-             reporter: 'dot',
-             phantomjs: {
-                useColors: true
-                }
-         }))
+      reporter: 'dot',
+      phantomjs: {
+        useColors: true
+      }
+    }))
     .on('error', gutil.log);
 });
 
+// Watch
 gulp.task('watch', function () {
-    gulp.watch('src/**/*.js', ['lint-src', 'browserify-bg', 'browserify-popup', 'browserify-test','test']);
-    gulp.watch('test/*.js', ['lint-test','lint-src', 'browserify-test', 'test']);
-    gulp.watch('src/**/*.scss', ['sass']);
+  gulp.watch('src/**/*.js', ['lint-src', 'browserify-background', 'browserify-popup', 'browserify-test', 'test']);
+  gulp.watch('test/*.js', ['lint-test', 'lint-src', 'browserify-test', 'test']);
+  gulp.watch('src/**/*.scss', ['sass']);
+  return true;
 });
 
-
-gulp.task('default', ['browserify-bg', 'browserify-test', 'test']);
-
-// Release
-gulp.task('release', function () {
-   return gulp.src(bg.devDest + bg.devName)
-   .pipe(strip())
-   .pipe(uglify())
-   .on('error', gutil.log)
-   .pipe(rename(bg.prodName))
-   .pipe(gulp.dest(bg.prodDest));
-});
-
+gulp.task('build', ['browserify-background', 'browserify-popup', 'browserify-test', 'sass']);
+gulp.task('default', ['build', 'test']);
 
