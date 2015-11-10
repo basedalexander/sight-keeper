@@ -6,6 +6,8 @@ v1.0.08
 
 ![alt text](http://i.imgur.com/LKZfdHU.jpg "Screenshot")
 
+![alt text](http://i.imgur.com/jW2a3Kj.png?1 "Screenshot")
+
 
 # Features :
 - Reminds your when your eyes should take a break.
