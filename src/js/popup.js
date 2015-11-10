@@ -69,7 +69,6 @@ switcherBtn.addEventListener('click', function (e) {
 sessionRestartBtn.addEventListener('click', function () {
   timer.clearSession();
   router.send('restartSession', null, function (response) {
-    timer.showSession(response);
   });
 });
 
