@@ -3,6 +3,10 @@ Version :
 ```bash
 v1.0.08
 ```
+
+![alt text](http://i.imgur.com/LKZfdHU.jpg "Screenshot")
+
+
 # Features :
 - Reminds your when your eyes should take a break.
 - Configurable periods.
