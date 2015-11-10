@@ -135,8 +135,6 @@ var Engine = (function () {
         this.startSession();
         router.send('sessionStarted');
         badger.enableIcon();
-
-        console.log('session started , period : ' + this._session.getPeriod());
       }
     },
 
@@ -181,19 +179,17 @@ var Engine = (function () {
           // app assumes that user have rested.
           if (sessionRunning) {
             self.trackAfk();
-            console.log('tracking AFK...');
           }
 
           // If session time elapsed and user doesn't do any inputs - start
           // idle period.
           if (!sessionRunning && !idleRunning) {
             self.startIdle();
-            console.log('idle started , period : ' + self._idle.getPeriod());
           }
-
-          if (idlePaused) {
-            self.startIdle();
-          }
+          //
+          //if (idlePaused) {
+          //  self.startIdle();
+          //}
 
           router.send('idle');
         }
@@ -206,13 +202,12 @@ var Engine = (function () {
           // stop countdown afk time.
           if (sessionRunning) {
             self.dontTrackAfk();
-            console.log('stop tracking AFK');
           }
 
           // If idle period is running and user have made an input -
           // notify user that idle period is not finished yet.
           if (idleRunning) {
-            self.pauseIdle();
+            self.endIdle();
             notify.idleInterrupted();
             audio.play(1);
           }
@@ -223,7 +218,6 @@ var Engine = (function () {
           if (!idleRunning && !sessionRunning) {
             notify.closeIdleEnded();
             self.startSession();
-            console.log('session started since did input');
           }
 
           router.send('active');
@@ -315,8 +309,9 @@ var Engine = (function () {
           }
 
           self.endSession();
-          console.log('session ended');
         }, t);
+
+        console.log('session started');
       }
     },
 
@@ -345,6 +340,7 @@ var Engine = (function () {
           console.log('idle started manually');
         }
 
+        console.log('session ended');
       }
     },
 
@@ -354,7 +350,6 @@ var Engine = (function () {
         notify.closeAll();
         this.endSession();
         this.startSession();
-        router.send('sessionStarted');
       }
     },
 
@@ -369,11 +364,12 @@ var Engine = (function () {
 
         this._idle.timeoutId = setTimeout(function () {
           self.endIdle();
-          console.log('idle ended');
 
           notify.idleEnded();
           audio.play(3);
         }, t);
+
+        console.log('idle started');
       }
     },
 
@@ -387,6 +383,7 @@ var Engine = (function () {
         this._idle.resetStartDate();
         router.send('idleEnded');
 
+        console.log('idle ended');
       }
     },
 
@@ -394,6 +391,8 @@ var Engine = (function () {
       value: function pauseIdle() {
         this.endIdle();
         this._idle.setStatus('paused');
+
+        console.log('idle paused');
       }
     },
 
@@ -408,9 +407,10 @@ var Engine = (function () {
           self.dontTrackAfk();
           self.endSession();
           router.send('sessionEnded');
-
-          console.log('session ended by AFK tracker');
+          console.log('AFK session ended');
         }, t);
+
+        console.log('AFK tracking...');
       }
     },
 
@@ -420,6 +420,8 @@ var Engine = (function () {
         clearTimeout(this._afk.timeoutId);
         this._afk.timeoutId = null;
         this._afk.startDate = null;
+
+        console.log('AFK stopped');
       }
     },
 
