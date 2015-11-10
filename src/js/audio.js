@@ -6,23 +6,23 @@ var Static = require('./Static.js');
 
 
 var audio = new Audio(''),
-    volumeStatic = new Static('volume', '1');
+  volumeStatic = new Static('volume', '1');
 
 document.body.appendChild(audio);
 
 
-function play (index) {
-    audio.src = 'audio/' + index + '.ogg';
-    audio.volume = volumeStatic.load();
-    audio.play();
+function play(index) {
+  audio.src = 'audio/' + index + '.ogg';
+  audio.volume = volumeStatic.load();
+  audio.play();
 }
 
-function stop () {
-    audio.src = '';
+function stop() {
+  audio.src = '';
 }
 
-function setVolume (volume) {
-    volumeStatic.save(volume);
+function setVolume(volume) {
+  volumeStatic.save(volume);
 }
 
 

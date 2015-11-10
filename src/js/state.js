@@ -6,20 +6,20 @@ console.info('status module');
 
 var state = new Static('state', 'on');
 
-function get () {
-    return state.load();
+function get() {
+  return state.load();
 }
 
-function setOn () {
-    state.save('on');
+function setOn() {
+  state.save('on');
 }
 
-function setOff () {
-    state.save('off');
+function setOff() {
+  state.save('off');
 }
 
-function isOn () {
-    return get() === 'on';
+function isOn() {
+  return get() === 'on';
 }
 
 exports.get = get;

@@ -1,68 +1,65 @@
 var sessionTimer = document.getElementById('session-timer'),
-    idleTimer = document.getElementById('idle-timer'),
-    sessionIntervalId,
-    idleIntervalId,
-    diff,
-    mins,
-    secs,
-    storage = window.localStorage;
+  idleTimer = document.getElementById('idle-timer'),
+  sessionIntervalId,
+  idleIntervalId,
+  diff,
+  mins,
+  secs,
+  storage = window.localStorage;
 
 
-function showSession () {
-    var value = storage.getItem('session.startDate');
+function showSession() {
+  var value = +storage.getItem('session.startDate');
 
-    if (!value) {
-        return;
-    }
+  // Do nothing if session period isn't running
+  if (!value) {
+    return;
+  }
 
+  sessionTimer.innerHTML = printTime(value);
+  sessionIntervalId = setInterval(function () {
     sessionTimer.innerHTML = printTime(value);
-    sessionIntervalId = setInterval(function () {
-        sessionTimer.innerHTML = printTime(value);
-    }, 1000);
+  }, 1000);
 }
 
-function clearSession () {
-    clearInterval(sessionIntervalId);
-    sessionTimer.innerHTML = '00:00';
+function clearSession() {
+  clearInterval(sessionIntervalId);
+  sessionTimer.innerHTML = '00:00';
 }
 
-function restartSession () {
-    clearSession();
-    showSession();
+function restartSession() {
+  clearSession();
+  showSession();
 }
 
-function showIdle (value) {
+function showIdle(value) {
 
-    if (!value) {
-        return;
-    }
+  var startDate = value || Date.now();
+  idleTimer.innerHTML = printTime(startDate);
 
-    idleTimer.innerHTML = printTime(value);
-
-    idleIntervalId = setInterval(function () {
-        idleTimer.innerHTML = printTime(value);
-    }, 1000);
+  idleIntervalId = setInterval(function () {
+    idleTimer.innerHTML = printTime(startDate);
+  }, 1000);
 }
 
-function clearIdle () {
-    clearInterval(idleIntervalId);
-    idleTimer.innerHTML = '00:00';
+function clearIdle() {
+  clearInterval(idleIntervalId);
+  idleTimer.innerHTML = '00:00';
 }
 
-function restartIdle () {
-    clearIdle();
-    showIdle();
-}
+function printTime(time) {
+  diff = new Date(Date.now() - time);
 
-function printTime (time) {
-    diff = new Date(Date.now() - time);
+  mins = diff.getMinutes();
+  if (mins < 10) {
+    mins = '0' + mins;
+  }
+  secs = diff.getSeconds();
+  if (secs < 10) {
+    secs = '0' + secs;
+  }
 
-    mins = diff.getMinutes();
-    if (mins < 10) { mins = '0' + mins; }
-    secs = diff.getSeconds();
-    if (secs < 10) { secs = '0' + secs; }
-
-    return mins + ':' + secs;
+  return mins + ':' + secs;
 }
 
 exports.showSession = showSession;
@@ -70,4 +67,3 @@ exports.clearSession = clearSession;
 exports.showIdle = showIdle;
 exports.clearIdle = clearIdle;
 exports.restartSession = restartSession;
-exports.restartIdle = restartIdle;
