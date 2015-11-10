@@ -1,3 +1,7 @@
+// TODO there is no way to check the states of modules's private attributes,
+// because of incapsulation.
+// Consider to move them from perivate  to pseudoprivate using underscore prefix
+
 var expect = require('chai').expect,
   sinon = require('sinon'),
   Static = require('../src/js/Static'),
@@ -8,7 +12,6 @@ var expect = require('chai').expect,
   badger = require('../src/js/badger');
 
   window.chrome = require('./chrome-mock');
-
 
 
 describe('Static module', function () {

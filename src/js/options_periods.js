@@ -7,7 +7,7 @@ var sessionTimer = document.getElementById('session-timer'),
   secs,
   storage = window.localStorage;
 
-
+// Shows current session time
 function showSession() {
   var value = +storage.getItem('session.startDate');
 
@@ -16,12 +16,13 @@ function showSession() {
     return;
   }
 
-  sessionTimer.innerHTML = printTime(value);
+  sessionTimer.innerHTML = formatDate(value);
   sessionIntervalId = setInterval(function () {
-    sessionTimer.innerHTML = printTime(value);
+    sessionTimer.innerHTML = formatDate(value);
   }, 1000);
 }
 
+// Resets session time to 00:00
 function clearSession() {
   clearInterval(sessionIntervalId);
   sessionTimer.innerHTML = '00:00';
@@ -32,22 +33,24 @@ function restartSession() {
   showSession();
 }
 
+// Shows current idle time
 function showIdle(value) {
 
   var startDate = value || Date.now();
-  idleTimer.innerHTML = printTime(startDate);
+  idleTimer.innerHTML = formatDate(startDate);
 
   idleIntervalId = setInterval(function () {
-    idleTimer.innerHTML = printTime(startDate);
+    idleTimer.innerHTML = formatDate(startDate);
   }, 1000);
 }
 
+// Resets session time to 00:00
 function clearIdle() {
   clearInterval(idleIntervalId);
   idleTimer.innerHTML = '00:00';
 }
 
-function printTime(time) {
+function formatDate(time) {
   diff = new Date(Date.now() - time);
 
   mins = diff.getMinutes();

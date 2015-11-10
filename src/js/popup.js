@@ -1,6 +1,7 @@
 'use strict';
 
-//todo timer doesn't work properly
+//TODO what a mess, break up code into modules
+
 var switcherBtn = document.getElementById('btn'),
   options = document.getElementById('options'),
 

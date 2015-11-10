@@ -66,55 +66,54 @@ var Engine = (function () {
     // Initialize app
     this.switcher();
 
+    // @link
+    // https://developer.chrome.com/extensions/idle#method-setDetectionInterval
     chrome.idle.setDetectionInterval(15);
 
-    // Pressed app switcher button
-    router.on('setStateOn', function () {
+    router
+      // Pressed app switcher button
+      .on('setStateOn', function () {
         self._state.setOn();
         self.switchOn();
-      }
-    );
+      })
 
-    router.on('setStateOff', function () {
+      .on('setStateOff', function () {
         self._state.setOff();
         self.switchOff();
-      }
-    );
+      })
 
-    // Pressed the restart sesson button
-    router.on('restartSession', function () {
+      // Pressed the restart sesson button
+      .on('restartSession', function () {
         self.restartSession();
         return self._session.getStartDate();
-      }
-    );
+      })
 
-    // Applying new session period
-    router.on('setSessionPeriod', function (message) {
-      self._session.setPeriod(message.value);
+      // Applying new session period
+      .on('setSessionPeriod', function (message) {
+        self._session.setPeriod(message.value);
+        self.endSession();
+        self.endIdle();
+        router.send('idleInded');
+        self.startSession();
+        router.send('sessionStarted');
+      })
 
-      self.endSession();
-      self.endIdle();
-      router.send('idleInded');
-      self.startSession();
-      router.send('sessionStarted');
-    });
+      // Applying new idle period
+      .on('setIdlePeriod', function (message) {
+        self._idle.setPeriod(message.value);
+      })
 
-    // Applying new idle period
-    router.on('setIdlePeriod', function (message) {
-      self._idle.setPeriod(message.value);
-    });
+      // Sounds turned off
+      .on('mute', function () {
+        audio.setVolume(0);
+      })
 
-    // Sounds turned off
-    router.on('mute', function () {
-      audio.setVolume(0);
-    });
-
-    // Sounds turned on
-    router.on('unmute', function () {
-      audio.setVolume(1);
-    });
+      // Sounds turned on
+      .on('unmute', function () {
+        audio.setVolume(1);
+      });
   }
-
+  // TODO consider to move that to 'extend' pattern
   _createClass(Engine, {
     switcher: {
 

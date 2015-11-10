@@ -4,7 +4,7 @@
   "description": "chrome extention with remind you when your eyes should get rest",
   "main": "index.js",
   "scripts": {
-    "build": "npm install && gulp build && gulp test",
+    "build": "npm install && gulp build && gulp test"
   },
   "repository": {
     "type": "git",
