@@ -5,12 +5,12 @@ A chrome extension whose purpose is to save your sight.
 
 To build :
 ```bash
-gulp build
+npm build
 ```
 
-Lint, build, test:
+Test:
 ```bash
-gulp
+gulp test
 ```
 
 Watcher:
