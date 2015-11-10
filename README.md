@@ -1,7 +1,15 @@
-# Sight-keeper
-- v1.0.08
-A chrome extension whose purpose is to save your sight.
-
+# Sight-keeper - is a chrome extension whose purpose is to save your sight.
+Version :
+```bash
+v1.0.08
+```
+# Features :
+- Reminds your when your eyes should take a break.
+- Configurable periods.
+- It is not neccesery to click something to start periods, except if you've decided to skip idle and start work period again.
+- Break period considered satisfied only when user didn't any input manipulations.
+- Smart afk detection.
+- Works in background even when you closed the browser.
 
 To build :
 ```bash
@@ -17,3 +25,4 @@ Watcher:
 ```bash
 gulp watch
 ```
+
