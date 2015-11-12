@@ -1,373 +1,363 @@
 'use strict';
 
+/**
+ * Module dependencies
+ */
+
+var state = require('./state'),
+  Period = require('./Period'),
+  Router = require('./Router'),
+  badger = require('./badger'),
+  utils = require('./utils'),
+  notify = require('./notify'),
+  audio = require('./audio'),
+  router = new Router('backend');
+
 console.info('Engine module');
 
-var state  = require('./state.js'),
-    Period = require('./Period.js'),
-    Router = require('./Router.js'),
-    badger = require('./badger.js'),
-    utils  = require('./utils.js'),
-    notify = require('./notify.js'),
-    audio  = require('./audio.js');
+var self;
 
-var session = new Period('session', '60000'),
-    idle = new Period('idle', '30000'),
-    router = new Router('backend'),
+function Engine() {
+  _classCallCheck(this, Engine);
 
-    afk = {
-        timeoutId: null,
-        startDate: null
+  // Save current this in outer scope
+  self = this;
+
+  this._state = state;
+  this._session = new Period('session', '60000'),
+    this._idle = new Period('idle', '30000'),
+    this._afk = {
+      timeoutId: null,
+      startDate: null
     };
 
-chrome.idle.setDetectionInterval(15);
+  // Initialize app
+  this.init();
 
-function switcher() {
-    if (state.isOn()) {
-        switchOn();
-    } else {
-        switchOff();
-    }
+  // @link
+  // https://developer.chrome.com/extensions/idle#method-setDetectionInterval
+  chrome.idle.setDetectionInterval(15);
+
+  router
+    // Pressed app switch button
+    .on('setStateOn', function () {
+      self._state.setOn();
+      self.switchOn();
+    })
+    .on('setStateOff', function () {
+      self._state.setOff();
+      self.switchOff();
+    })
+
+    // Pressed the restart sesson button
+    .on('restartSession', function () {
+      self.restartSession();
+      return self._session.getStartDate();
+    })
+
+    // Applying new session period
+    .on('setSessionPeriod', function (message) {
+      self._session.setPeriod(message.value);
+      self.endSession();
+      self.endIdle();
+      router.send('idleInded');
+      self.startSession();
+      router.send('sessionStarted');
+    })
+
+    // Applying new idle period
+    .on('setIdlePeriod', function (message) {
+      self._idle.setPeriod(message.value);
+    })
+
+    // Sounds turned off
+    .on('mute', function () {
+      audio.setVolume(0);
+    })
+
+    // Sounds turned on
+    .on('unmute', function () {
+      audio.setVolume(1);
+    });
 }
 
-function switchOn() {
-    console.info('switched ON');
+extend(Engine.prototype, {
 
-    addIdleListener();
-    addBtnListener();
-    startSession();
+  init: function init() {
+    if (this._state.isOn()) {
+      this.switchOn();
+    }
+  },
+
+  switchOn: function switchOn() {
+    console.info('switched ON');
+    this.addIdleListener();
+    this.addNotifyBtnListener();
+    this.startSession();
     router.send('sessionStarted');
     badger.enableIcon();
+  },
 
-    console.log('session started , period : ' + session.getPeriod());
-}
-
-function switchOff() {
+  switchOff: function switchOff() {
     console.info('SK is OFF');
 
-    state.setOff();
-
-    if (isAfk()) {
-        dontTrackAfk();
+    if (this.isAfk()) {
+      this.dontTrackAfk();
     }
 
-    endSession();
+    this.endSession();
     router.send('sessionEnded');
-    endIdle();
+    this.endIdle();
     router.send('idleInded');
-    rmIdleListener();
-    rmBtnListener();
+    this.rmIdleListener();
+    this.rmNotifyBtnListener();
     badger.disableIcon();
     audio.stop();
     notify.closeAll();
-}
+  },
 
+  /**
+   * Main logic goes here
+   * @link https://developer.chrome.com/extensions/idle
+   */
 
-function idleListener(idleState) {
+  idleListener: function idleListener(idleState) {
     console.log(idleState + ' fired');
+    var idleRunning = self._idle.isRunning(),
+      sessionRunning = self._session.isRunning();
 
-    var idleRunning = idle.isRunning(),
-        sessionRunning = session.isRunning(),
-        idlePaused = idle.isPaused();
-
-    // If app state is 'off' - ignore
-    if (!state.isOn()) {
-        return;
-    }
-
-    // IDLE state fired!
+    /** IDLE FIRED! **/
     if (idleState === 'idle') {
 
-        // If session is running and user goes afk ,
-        // start countdown certain amount of time, after witch
-        // app assumes that user have rested.
-        if (sessionRunning) {
-            trackAfk();
-            console.log('tracking AFK...');
-        }
+      // If user afk while work period is running - count afk time.
+      if (sessionRunning) {
+        self.trackAfk();
+      }
 
-        // If session time elapsed and user doesn't do any inputs - start
-        // idle period.
-        if (!sessionRunning && !idleRunning) {
-            startIdle();
-            router.send('idleStarted');
-            console.log('idle started , period : ' + idle.getPeriod());
-        }
+      // Session period ended, can start idle period.
+      if (!sessionRunning && !idleRunning) {
+        self.startIdle();
+      }
 
-        if (idlePaused) {
-            startIdle();
-            router.send('idleStarted');
-        }
-
-        router.send('idle');
+      // Notify popup that user is afk
+      router.send('idle');
     }
 
 
-    // ACTIVE state fired!
+    /** ACTIVE FIRED! **/
     if (idleState === 'active') {
 
-        // If user was afk while session was running -
-        // stop countdown afk time.
-        if (sessionRunning) {
-            dontTrackAfk();
-            console.log('stop tracking AFK');
-        }
+      // User came back, reset afk timer.
+      if (sessionRunning) {
+        self.dontTrackAfk();
+      }
 
-        // If idle period is running and user have made an input -
-        // notify user that idle period is not finished yet.
-        if (idleRunning) {
-            pauseIdle();
-            notify.idleInterrupted();
-            audio.play(1);
-            router.send('idleEnded');
-        }
+      // User don't want rest.
+      if (idleRunning) {
+        self.endIdle();
+        notify.idleInterrupted();
+        audio.play(1);
+      }
 
-        // If idle period finished and user makes an input -
-        // start session period and close desktop notification
-        // 'idle finished'.
-        if (!idleRunning && !sessionRunning) {
-            notify.closeIdleEnded();
-            startSession();
-            router.send('sessionStarted');
-            console.log('session started since did input');
-        }
+      // Idle period was finished, and user came back.
+      if (!idleRunning && !sessionRunning) {
+        notify.closeIdleEnded();
+        self.startSession();
+      }
 
-        router.send('active');
+      // Notify popup that user if active.
+      router.send('active');
     }
-}
+  },
 
-function addIdleListener() {
-    chrome.idle.onStateChanged.addListener(idleListener);
+  addIdleListener: function addIdleListener() {
+    chrome.idle.onStateChanged.addListener(this.idleListener);
     console.log('idle listener added');
-}
+  },
 
-function rmIdleListener() {
-    chrome.idle.onStateChanged.removeListener(idleListener);
+  rmIdleListener: function rmIdleListener() {
+    chrome.idle.onStateChanged.removeListener(this.idleListener);
     console.log('idle listener removed');
-}
+  },
 
 
-function btnListener(id, buttonIndex) {
+  /**
+   * Chrome notification button's handler
+   *
+   * @param id {string} notification id
+   * @param buttonIndex {number}
+   * @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
+   * TODO: refactor
+   */
 
-    // Chrome notification button's handler
-    // @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
+  notifyBtnListener: function notifyBtnListener(id, buttonIndex) {
 
-    // Close notification when user clicks any button
+    // Imidiately close notification.
     chrome.notifications.clear(id, function () {
     });
 
     if (id === 'sessionEnd') {
 
-        if (buttonIndex === 0) {
-            startSession();
-            console.log('session started by skipping idle , period : ' + utils.ms2min(session.period.load()) + ' min');
-        } else {
+      // Pressed first button
+      if (buttonIndex === 0) {
+        self.startSession();
+      } else {
 
-            // TODO make this value configurable.
-            // get rid of hardcode
-            startSession(5 * 60000);
-            console.log('session started , reminder, period : 5 mins');
-        }
+        // Pressed second button, remind again in 5 minutes
+        self.startSession(5 * 60000);
+      }
     }
 
     if (id === 'idleInterrupted') {
-
-
-        if (buttonIndex === 0) {
-            endIdle();
-            startSession();
-        }
+      if (buttonIndex === 0) {
+        self.endIdle();
+        self.startSession();
+      }
     }
+  },
 
-    router.send('sessionStarted');
-}
-
-function addBtnListener() {
-    chrome.notifications.onButtonClicked.addListener(btnListener);
+  addNotifyBtnListener: function addBtnListener() {
+    chrome.notifications.onButtonClicked.addListener(this.notifyBtnListener);
     console.log('btn listener added');
-}
+  },
 
-function rmBtnListener() {
-    chrome.notifications.onButtonClicked.removeListener(btnListener);
+  rmNotifyBtnListener: function rmBtnListener() {
+    chrome.notifications.onButtonClicked.removeListener(this.notifyBtnListener);
     console.log('btn listener removed');
-}
+  },
 
+  startSession: function startSession(time) {
+    var t = time || +this._session.getPeriod();
+    this._session.setStatus('running');
+    this._session.setStartDate(Date.now());
 
-function startSession(time) {
-    var t = time || +session.getPeriod();
+    // Tell popup that session is started.
+    router.send('sessionStarted');
 
-    session.setStatus('running');
-    session.setStartDate(Date.now());
+    this._session.timeoutId = setTimeout(function () {
 
-    session.timerId = setTimeout(function () {
-        if (!isAfk()) {
-            notify.sessionEnded();
-            audio.play(1);
-        } else {
-            audio.play(1);
-        }
+      // User is not afk. Show notification.
+      if (!self.isAfk()) {
+        notify.sessionEnded();
+        audio.play(1);
+      } else {
 
-        endSession();
-        console.log('session ended');
+        // User is afk. Just play sound.
+        audio.play(1);
+      }
+      self.endSession();
     }, t);
-}
 
-function endSession() {
+    console.log('session started');
+  },
 
-    // For cases when user was idling (was called trackAfk())
-    clearTimeout(session.timerId);
-    session.timerId = null;
+  endSession: function endSession() {
+    clearTimeout(this._session.timeoutId);
+    this._session.timeoutId = null;
+    this._session.resetStatus();
+    this._session.resetStartDate();
 
-    // Sets session status to default ('stopped')
-    session.status.reset();
-
-    // Sets session startDate to default ('0')
-    session.startDate.reset();
-
+    // Tell popup that session ended.
     router.send('sessionEnded');
 
-
-    // If session period finished while user is still afk - run idle
-    // manually
-    // @link https://developer.chrome.com/extensions/idle#method-queryState
-    if (isAfk()) {
-        dontTrackAfk();
-        startIdle();
-        router.send('idleStarted');
-        console.log('idle started manually');
+    // User is afk. Start idle period immediately.
+    if (this.isAfk()) {
+      this.dontTrackAfk();
+      this.startIdle();
+      console.log('idle started manually');
     }
+    console.log('session ended');
+  },
 
-}
-
-function restartSession() {
+  restartSession: function restartSession() {
     audio.stop();
     notify.closeAll();
-    endSession();
-    startSession();
-    router.send('sessionStarted');
-}
+    this.endSession();
+    this.startSession();
+  },
 
+  startIdle: function startIdle(time) {
+    var t = time || +this._idle.getPeriod();
+    this._idle.setStatus('running');
+    this._idle.setStartDate(Date.now());
 
-// Starts idle period
-function startIdle(time) {
-    var t = time || +idle.period.load();
-
-    idle.status.save('running');
-    idle.startDate.save(Date.now());
-
-    idle.timerId = setTimeout(function () {
-        endIdle();
-        console.log('idle ended');
-
-        notify.idleEnded();
-        audio.play(3);
-        router.send('idleEnded');
+    // Notify popup.
+    router.send('idleStarted');
+    this._idle.timeoutId = setTimeout(function () {
+      self.endIdle();
+      notify.idleEnded();
+      audio.play(3);
     }, t);
-}
+    console.log('idle started');
+  },
 
-function endIdle() {
+  endIdle: function endIdle() {
+    clearTimeout(this._idle.timeoutId);
+    this._idle.timeoutId = null;
+    this._idle.resetStatus();
+    this._idle.resetStartDate();
 
-    clearTimeout(idle.timerId);
-    idle.timerId = null;
+    // Notify popup.
+    router.send('idleEnded');
+    console.log('idle ended');
+  },
 
-    idle.status.reset();
-    idle.startDate.reset();
+  trackAfk: function trackAfk() {
 
-}
+    // Afk timer === idle.getPeriod();
+    var t = this._idle.getPeriod();
+    this._afk.startDate = Date.now();
 
-function pauseIdle() {
-    endIdle();
-    idle.status.save('paused');
-}
+    // Notify popup.
+    router.send('afk', this._afk.startDate);
+    this._afk.timeoutId = setTimeout(function () {
+      self.dontTrackAfk();
+      self.endSession();
 
-function restartIdle() {
-    audio.stop();
-    notify.closeAll();
-    endIdle();
-    startIdle();
-}
-
-
-function trackAfk() {
-    var t = idle.getPeriod();
-    afk.startDate = Date.now();
-
-    router.send('afk', afk.startDate);
-
-    afk.timeoutId = setTimeout(function () {
-        dontTrackAfk();
-        endSession();
-        router.send('sessionEnded');
-
-        console.log('session ended by AFK tracker');
+      // Notify popup.
+      router.send('sessionEnded');
+      console.log('AFK session ended');
     }, t);
-}
 
-function dontTrackAfk() {
+    console.log('AFK tracking...');
+  },
+
+  dontTrackAfk: function dontTrackAfk() {
+    clearTimeout(this._afk.timeoutId);
+    this._afk.timeoutId = null;
+    this._afk.startDate = null;
+
+    // Notify popup.
     router.send('notAfk');
-    clearTimeout(afk.timeoutId);
-    afk.timeoutId = null;
-    afk.startDate = null;
+    console.log('AFK stopped');
+  },
+
+  isAfk: function isAfk() {
+    return !!this._afk.timeoutId;
+  }
+});
+
+
+/** Help functions */
+
+function extend(receiver, supplier) {
+  Object.keys(supplier).forEach(function (property) {
+    var descriptor = Object.getOwnPropertyDescriptor(supplier, property);
+    Object.defineProperty(receiver, property, descriptor);
+  });
+  return receiver;
 }
 
-function isAfk() {
-    return !!afk.timeoutId;
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
 }
 
-function Engine () {
-    // Initialize app
-    switcher();
-
-    // Pressed app switcher button
-    router.on('setStateOn', function () {
-            state.setOn();
-            switchOn();
-        }
-    );
-
-    router.on('setStateOff', function () {
-            state.setOff();
-            switchOff();
-        }
-    );
-
-    // Pressed the restart sesson button
-    router.on('restartSession', function () {
-            restartSession();
-            return session.getStartDate();
-        }
-    );
-
-    // Applying new session period
-    router.on('setSessionPeriod', function (message) {
-        session.setPeriod(message.value);
-
-        endSession();
-        endIdle();
-        router.send('idleInded');
-        startSession();
-        router.send('sessionStarted');
-    });
-
-    // Applying new idle period
-    router.on('setIdlePeriod', function (message) {
-        idle.setPeriod(message.value);
-    });
-
-    // Sounds turned off
-    router.on('mute', function () {
-        audio.setVolume(0);
-    });
-
-    // Sounds turned on
-    router.on('unmute', function () {
-        audio.setVolume(1);
-    });
-
-
-    this.switchOn = switchOn;
-    this.switchOff = switchOff;
-
-}
-
+/**
+ * Module exports
+ */
 
 module.exports = Engine;
+
+

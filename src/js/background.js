@@ -1,5 +1,5 @@
 'use strict';
 
-var Engine = require('./Engine(1).js');
+var Engine = require('./Engine');
 
 var engine = new Engine();

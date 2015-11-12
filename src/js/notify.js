@@ -40,26 +40,33 @@ var sessionOpts = {
 // Stores Notification instance
   notifyIdleEnded;
 
+/**
+ * Module exprots
+ */
+
+exports.sessionEnded = sessionEnded;
+exports.idleEnded = idleEnded;
+exports.closeIdleEnded = closeIdleEnded;
+exports.idleInterrupted = idleInterrupted;
+exports.closeAll = closeAll;
+
 
 function sessionEnded() {
 
   // @link https://developer.chrome.com/apps/notifications#method-create
   chrome.notifications.create('sessionEnd', sessionOpts, function (id) {
-
     setTimeout(function () {
 
       // @link https://developer.chrome.com/apps/notifications#method-clear
       chrome.notifications.clear(id, function () {
       });
-
     }, 23000);
   });
 }
 
-// Notifies that idle session is ended,
-// notification showed untill user make any imput.
-// @link https://developer.mozilla.org/en-US/docs/Web/API/notification
 function idleEnded() {
+
+  // @link https://developer.mozilla.org/en-US/docs/Web/API/notification
   notifyIdleEnded = new Notification('Good job!', idleEndedOpts);
 }
 
@@ -70,12 +77,10 @@ function closeIdleEnded() {
   }
 }
 
-
 function idleInterrupted() {
 
   // @link https://developer.chrome.com/apps/notifications#method-create
   chrome.notifications.create('idleInterrupted', idleInterruptedOpts, function (id) {
-
     setTimeout(function () {
 
       // @link https://developer.chrome.com/apps/notifications#method-clear
@@ -96,9 +101,5 @@ function closeAll() {
 }
 
 
-exports.sessionEnded = sessionEnded;
-exports.idleEnded = idleEnded;
-exports.closeIdleEnded = closeIdleEnded;
-exports.idleInterrupted = idleInterrupted;
-exports.closeAll = closeAll;
+
 

@@ -2,7 +2,22 @@
 
 console.info('audio module');
 
+
+/**
+ * Module dependencies
+ */
+
 var Static = require('./Static.js');
+
+
+/**
+ * Module exports
+ */
+
+exports.play = play;
+exports.stop = stop;
+exports.setVolume = setVolume;
+
 
 
 var audio = new Audio(''),
@@ -22,10 +37,6 @@ function stop() {
 }
 
 function setVolume(volume) {
-  volumeStatic.save(volume);
+  return volumeStatic.save(volume);
 }
 
-
-exports.play = play;
-exports.stop = stop;
-exports.setVolume = setVolume;

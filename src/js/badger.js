@@ -2,6 +2,9 @@
 
 console.info('badger module');
 
+/**
+ * Module exports
+ */
 
 exports.enableIcon = enableIcon;
 exports.disableIcon = disableIcon;
@@ -14,6 +17,7 @@ function disableIcon() {
   }, function () {
   });
 }
+
 
 function enableIcon() {
   chrome.browserAction.setIcon({
