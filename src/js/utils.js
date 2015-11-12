@@ -2,6 +2,10 @@
 
 console.info('utils module');
 
+/**
+ * Module exports
+ */
+
 module.exports = {
 
   ms2min: function (ms) {

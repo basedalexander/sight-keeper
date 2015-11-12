@@ -1,112 +1,80 @@
 'use strict';
 
-var _createClass = (function () {
-  function defineProperties(target, props) {
-    var key, prop;
-    for (key in props) {
-      if (props.hasOwnProperty(key)) {
-        prop = props[key];
-        prop.configurable = true;
-        if (prop.value) {
-          prop.writable = true;
-        }
-      }
-    }
-    Object.defineProperties(target, props);
-  }
+console.info('Period module');
 
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) {
-      defineProperties(Constructor.prototype, protoProps);
-    }
-    if (staticProps) {
-      defineProperties(Constructor, staticProps);
-    }
-    return Constructor;
-  };
-})();
-
-var _classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
-
+/**
+ * Module dependecies
+ */
 
 var Static = require('./Static');
 
-console.info('Period module');
+/**
+ * Module exports
+ */
+
+module.exports = Period;
 
 function Period(name, time) {
-
   _classCallCheck(this, Period);
-
   this._status = new Static(name + '.status', 'stopped');
   this._period = new Static(name + '.period', time);
   this._startDate = new Static(name + '.startDate', '0');
-  this.timeoutId = null;
   this._status.reset();
   this._startDate.reset();
+  this.timeoutId = null;
 }
 
-
-_createClass(Period, {
-  isRunning: {
-    value: function isRunning() {
-      return this.getStatus() === 'running';
-    }
+extend(Period.prototype, {
+  isRunning: function isRunning() {
+    return this.getStatus() === 'running';
   },
-  isPaused: {
-    value: function isPaused() {
-      return this.getStatus() === 'paused';
-    }
+  isPaused: function isPaused() {
+    return this.getStatus() === 'paused';
   },
-  setStatus: {
-    value: function setStatus(status) {
-      return this._status.save(status);
-    }
+  setStatus: function setStatus(status) {
+    return this._status.save(status);
   },
-  getStatus: {
-    value: function getStatus() {
-      return this._status.load();
-    }
+  getStatus: function getStatus() {
+    return this._status.load();
   },
-  resetStatus: {
-    value: function resetStatus() {
-      return this._status.reset();
-    }
+  resetStatus: function resetStatus() {
+    return this._status.reset();
   },
-  setPeriod: {
-    value: function setPeriod(period) {
-      return this._period.save(period);
-    }
+  setPeriod: function setPeriod(period) {
+    return this._period.save(period);
   },
-  getPeriod: {
-    value: function getPeriod() {
-      return this._period.load();
-    }
+  getPeriod: function getPeriod() {
+    return this._period.load();
   },
-  resetPeriod: {
-    value: function resetPeriod() {
-      this._period.reset();
-    }
+  resetPeriod: function resetPeriod() {
+    this._period.reset();
   },
-  setStartDate: {
-    value: function setStartDate(date) {
-      this._startDate.save(date);
-    }
+  setStartDate: function setStartDate(date) {
+    this._startDate.save(date);
   },
-  getStartDate: {
-    value: function getStartDate() {
-      this._startDate.load();
-    }
+  getStartDate: function getStartDate() {
+    this._startDate.load();
   },
-  resetStartDate: {
-    value: function resetStartDate() {
-      this._startDate.reset();
-    }
+  resetStartDate: function resetStartDate() {
+    this._startDate.reset();
   }
 });
 
 
-module.exports = Period;
+/** Help functions */
+
+function extend(receiver, supplier) {
+  Object.keys(supplier).forEach(function (property) {
+    var descriptor = Object.getOwnPropertyDescriptor(supplier, property);
+    Object.defineProperty(receiver, property, descriptor);
+  });
+  return receiver;
+}
+
+function _classCallCheck (instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+
