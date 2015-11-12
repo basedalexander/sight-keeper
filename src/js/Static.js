@@ -51,7 +51,7 @@ extend(Static.prototype, {
     var value = window.localStorage.getItem(this._name);
 
     // If value successfuly retrieved - return it
-    if (value !== null) {
+    if (!!value) {
       return value;
     }
 
