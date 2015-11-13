@@ -24,8 +24,8 @@ function Engine() {
   self = this;
 
   this._state = state;
-  this._session = new Period('session', '60000');
-  this._idle = new Period('idle', '30000');
+  this._session = new Period('session', '2700000');
+  this._idle = new Period('idle', '300000');
   this._afk = {
     timeoutId: null,
     startDate: null
