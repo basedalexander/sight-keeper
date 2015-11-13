@@ -28,9 +28,6 @@ extend(Period.prototype, {
   isRunning: function isRunning() {
     return this.getStatus() === 'running';
   },
-  isPaused: function isPaused() {
-    return this.getStatus() === 'paused';
-  },
   setStatus: function setStatus(status) {
     return this._status.save(status);
   },
