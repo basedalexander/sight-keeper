@@ -1,22 +1,11 @@
-// TODO there is no way to check the states of modules's private attributes,
-// because of incapsulation.
-// Consider to move them from perivate  to pseudoprivate using underscore prefix
+'use strict';
 
-var expect = require('chai').expect,
-  sinon = require('sinon'),
-  Static = require('../src/js/Static'),
-  Period = require('../src/js/Period'),
-  notify = require('../src/js/notify'),
-  utils = require('../src/js/utils'),
-  badger = require('../src/js/badger');
+var expect = require('chai').expect;
+var sinon = require('sinon');
 
+// Mocked APIs
 window.chrome = require('./chrome-mock');
-window.Audio = function () {
-  var audio =  document.createElement('audio');
-  audio.play = function () {};
-  audio.stop = function () {};
-  return audio;
-};
+window.Audio = require('./audio-mock');
 
 describe('Static module', function () {
   var Static = require('../src/js/Static');
@@ -98,8 +87,6 @@ describe('Static module', function () {
 
 describe("Router module", function () {
   var Router = require('../src/js/Router');
-  //var router = new Router('backend');
-  //var router2 = new Router('frontend');
 
   describe('router instance', function () {
     var router = new Router('backend');
@@ -161,6 +148,23 @@ describe("Router module", function () {
     });
     removeListener.restore();
   });
+
+  describe('checking communication between two routers', function () {
+    var router = new Router('backend');
+    var router2 = new Router('frontend');
+    var obj = {
+      handler: function () {}
+    };
+
+    // TODO find out how to test that in sinon
+    it.skip('should call handler on appropriate message', function () {
+      router.on('thing', obj.handler);
+      expect(router._listeners.thing).to.be.a('function');
+      var spy = sinon.spy(router._listeners, 'thing');
+      router2.send('thing');
+      expect(spy.called).ok;
+    });
+  });
 });
 
 describe('state module', function () {
@@ -187,8 +191,9 @@ describe('state module', function () {
 });
 
 describe("notify module", function () {
-  var create = sinon.spy(chrome.notifications, 'create'),
-    clear = sinon.spy(chrome.notifications, 'clear');
+  var notify = require('../src/js/notify');
+  var create = sinon.spy(chrome.notifications, 'create');
+  var clear = sinon.spy(chrome.notifications, 'clear');
 
   after(function () {
     create.restore();
@@ -218,6 +223,7 @@ describe("notify module", function () {
 });
 
 describe("badger module", function () {
+  var badger = require('../src/js/badger');
   var setIcon = sinon.spy(chrome.browserAction, 'setIcon');
   badger.enableIcon();
   badger.disableIcon();
@@ -226,6 +232,8 @@ describe("badger module", function () {
 });
 
 describe("utils module", function () {
+  var utils = require('../src/js/utils');
+
   it("ms2min", function () {
     expect(utils.ms2min(60000)).to.equal(1);
     expect(utils.ms2min(30000)).to.equal(0.5);
