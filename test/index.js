@@ -12,7 +12,10 @@ var expect = require('chai').expect,
 
 window.chrome = require('./chrome-mock');
 window.Audio = function () {
-  return document.createElement('audio');
+  var audio =  document.createElement('audio');
+  audio.play = function () {};
+  audio.stop = function () {};
+  return audio;
 };
 
 describe('Static module', function () {
@@ -279,8 +282,59 @@ describe('Engine module', function () {
       });
     });
 
-    describe('switchOn method', function () {
+    describe('idle listener handler', function () {
+      var startSession = sinon.stub(engine, 'startSession');
+      var track = sinon.stub(engine, 'trackAfk');
+      var startIdle = sinon.stub(engine, 'startIdle');
+      var dontTrack = sinon.stub(engine, 'dontTrackAfk');
+      var endIdle = sinon.stub(engine, 'endIdle');
 
+      after(function () {
+        startSession.restore();
+        track.restore();
+        startIdle.restore();
+        dontTrack.restore();
+        endIdle.restore();
+      });
+
+      it('fired "idle" , should call trackAfk if session period is' +
+        ' running', function () {
+        window.localStorage.setItem('session.status', 'running');
+        window.localStorage.setItem('idle.status', 'stopped');
+        engine.idleListener('idle');
+        expect(track.calledOnce).ok;
+      });
+      it('fired "idle , should call startIdle if session status' +
+        ' "stopped"' +
+        ' and' +
+        ' idle' +
+        ' status' +
+        ' "stopped" ', function () {
+        window.localStorage.setItem('session.status', 'stopped');
+        window.localStorage.setItem('idle.status', 'stopped');
+        engine.idleListener('idle');
+        expect(startIdle.calledOnce).ok;
+        expect(track.calledOnce).ok;
+      });
+      it('active fired, should call dontTrackAfk, session is running', function () {
+        window.localStorage.setItem('session.status', 'running');
+        window.localStorage.setItem('idle.status', 'stopped');
+        engine.idleListener('active');
+        expect(dontTrack.calledOnce).ok;
+      });
+      it('active fired, should call endIdle, idle session is running', function () {
+        window.localStorage.setItem('session.status', 'stopped');
+        window.localStorage.setItem('idle.status', 'running');
+        engine.idleListener('active');
+        expect(endIdle.calledOnce).ok;
+      });
+      it('active fire, should call startSession, session is stopped and idle' +
+        ' is stopped as well', function () {
+        window.localStorage.setItem('session.status', 'stopped');
+        window.localStorage.setItem('idle.status', 'stopped');
+        engine.idleListener('active');
+        expect(startSession.calledOnce).ok;
+      });
     });
   });
 });
