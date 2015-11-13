@@ -10,11 +10,24 @@ module.exports = {
   // Notifications
   notifications: {
     create: function () {},
-    clear: function () {}
+    clear: function () {},
+    onButtonClicked: {
+      addListener: function () {},
+      removeListener: function () {}
+    }
   },
 
   // Browser action
   browserAction: {
     setIcon: function () {}
+  },
+
+  // Idle
+  idle: {
+    onStateChanged: {
+      addListener: function () {},
+      removeListener: function () {}
+    },
+    setDetectionInterval: function () {}
   }
 };
