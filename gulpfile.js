@@ -22,11 +22,16 @@ var mochaPhantomjs = require('gulp-mocha-phantomjs');
 var strip = require('gulp-strip-debug');
 var uglify = require('gulp-uglify');
 var minify = require('gulp-minify-css');
+var fs = require('fs');
 
 
 // Setup
 /******************************************************************************/
-
+var path = {
+  src: 'src/',
+  build: 'build/dev/',
+  dist: 'dist/'
+}
 var background = {
   src: ['src/js/background.js'],
   devName: 'background-bundle.js',
@@ -162,14 +167,38 @@ gulp.task('watch', function () {
 
 // Dist
 gulp.task('dist', function () {
-  gulp.src('build/dev/css/styles.css')
+  gulp.src(path.build + 'css/*.css')
     .pipe(minify())
-    .pipe(gulp.dest('dist/css/'));
+    .pipe(gulp.dest(path.dist + 'css/'));
 
-  gulp.src('build/dev/js/*.js')
+  gulp.src(path.build + 'js/*.js')
     .pipe(strip())
     .pipe(uglify())
-    .pipe(gulp.dest('dist/js/'));
+    .pipe(gulp.dest(path.dist + 'js/'));
+
+  // Clear dist/img directory
+  fs.readdirSync(path.dist + 'img/').forEach(function (a) {
+    fs.unlinkSync(path.dist + 'img/' + a);
+  });
+
+  // Copy images
+  gulp.src(path.build + 'img/*')
+    .pipe(gulp.dest(path.dist + 'img/'));
+
+  // Clear dist/audio directory
+  fs.readdirSync(path.dist + 'audio/').forEach(function (a) {
+    fs.unlinkSync(path.dist + 'audio/' + a);
+  });
+
+  // Copy audio files
+  gulp.src(path.build + 'audio/*')
+    .pipe(gulp.dest(path.dist + 'audio/'));
+
+  gulp.src(path.build + '*.html')
+    .pipe(gulp.dest(path.dist));
+
+  gulp.src(path.build + 'manifest.json')
+    .pipe(gulp.dest(path.dist));
 });
 
 gulp.task('build', ['browserify-background', 'browserify-popup', 'browserify-test', 'sass']);
