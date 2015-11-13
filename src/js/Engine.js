@@ -24,12 +24,12 @@ function Engine() {
   self = this;
 
   this._state = state;
-  this._session = new Period('session', '60000'),
-    this._idle = new Period('idle', '30000'),
-    this._afk = {
-      timeoutId: null,
-      startDate: null
-    };
+  this._session = new Period('session', '60000');
+  this._idle = new Period('idle', '30000');
+  this._afk = {
+    timeoutId: null,
+    startDate: null
+  };
 
   // Initialize app
   this.init();
@@ -106,9 +106,7 @@ extend(Engine.prototype, {
     }
 
     this.endSession();
-    router.send('sessionEnded');
     this.endIdle();
-    router.send('idleInded');
     this.rmIdleListener();
     this.rmNotifyBtnListener();
     badger.disableIcon();
