@@ -1,7 +1,7 @@
 # Sight-keeper - is a chrome extension whose purpose is to save your sight.
 Version :
 ```bash
-v1.0.08
+v1.0.09
 ```
 
 ![alt text](http://i.imgur.com/LKZfdHU.jpg "Screenshot")
@@ -17,18 +17,32 @@ v1.0.08
 - Smart afk detection.
 - Works in background even when you closed the browser.
 
+# Installation:
+```bash
+git clone https://github.com/thohoh/sight-keeper sight-keeper && cd sight-keeper
+```
+Then do following:
+- In Chrome go to : Settings > More tools > Extentions.
+- Ensure that "Developer mode" is checked (right top corner).
+- Then click "load unpacked extention" and choose dist folder in sight-keeper
+ folder.
+- Enjoy.
+
+
+# Want to contribute? Great!
+
 To build :
 ```bash
-npm build
+npm run build
 ```
-
 Test:
 ```bash
 gulp test
 ```
-
 Watcher:
 ```bash
 gulp watch
 ```
+
+ Check gulpfile.js for more tasks
 
