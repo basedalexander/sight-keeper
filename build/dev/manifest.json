@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Sight keeper",
-  "version": "1.0.0",
+  "version": "1.0.09",
 
   "description": "Prevents your eyes from overwork. For those who value their health.",
   "icons": {

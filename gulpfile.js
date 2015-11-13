@@ -21,6 +21,7 @@ var mochaPhantomjs = require('gulp-mocha-phantomjs');
 // Release Dependecies
 var strip = require('gulp-strip-debug');
 var uglify = require('gulp-uglify');
+var minify = require('gulp-minify-css');
 
 
 // Setup
@@ -157,6 +158,18 @@ gulp.task('watch', function () {
   gulp.watch('test/*.js', ['lint-test', 'lint-src', 'browserify-test', 'test']);
   gulp.watch('src/**/*.scss', ['sass']);
   return true;
+});
+
+// Dist
+gulp.task('dist', function () {
+  gulp.src('build/dev/css/styles.css')
+    .pipe(minify())
+    .pipe(gulp.dest('dist/css/'));
+
+  gulp.src('build/dev/js/*.js')
+    .pipe(strip())
+    .pipe(uglify())
+    .pipe(gulp.dest('dist/js/'));
 });
 
 gulp.task('build', ['browserify-background', 'browserify-popup', 'browserify-test', 'sass']);
