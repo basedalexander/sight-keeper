@@ -11,6 +11,10 @@ module.exports = Router;
 
 function Router(identifier) {
 
+  if (!(this instanceof Router)) {
+    return new Router(identifier);
+  }
+
   this._id = identifier;
   this._listeners = {};
   var self = this;
