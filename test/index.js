@@ -90,9 +90,14 @@ describe("Router module", function () {
 
   describe('router instance', function () {
     var router = new Router('backend');
+    var router1 = Router('backend');
+
     it('should have proper private props', function () {
       expect(router._id).to.equal('backend');
       expect(router._listeners).to.deep.equal({});
+    });
+    it('should act like a save calling constructor', function () {
+      expect(router1._id).to.equal('backend');
     });
   });
 
