@@ -1,17 +1,16 @@
 'use strict';
-
+//TODO close notification when user goes afk
 /**
  * Module dependencies
  */
 
 var state = require('./state'),
   Period = require('./Period'),
-  Router = require('./Router'),
+  router = require('./Router')('backend'),
   badger = require('./badger'),
   utils = require('./utils'),
   notify = require('./notify'),
-  audio = require('./audio'),
-  router = new Router('backend');
+  audio = require('./audio');
 
 console.info('Engine module');
 

@@ -16,11 +16,10 @@ var switcherBtn = document.getElementById('btn'),
   soundsBtn = document.getElementById('sounds-btn'),
 
 // Init modules
-  Router = require('./Router.js'),
-  utils = require('./utils.js'),
-  audio = require('./audio.js'),
-  timer = require('./options_periods'),
-  router = new Router('frontend');
+  router = require('./Router')('frontend'),
+  utils = require('./utils'),
+  audio = require('./audio'),
+  timer = require('./options_periods');
 
 
 (function init() {
@@ -29,6 +28,7 @@ var switcherBtn = document.getElementById('btn'),
     idlePeriod = window.localStorage.getItem('idle.period'),
     sounds = +window.localStorage.getItem('volume');
 
+  // App is on
   if (state === 'on') {
     switcherBtn.classList.add('app-btn-active');
     timer.showSession();
@@ -37,42 +37,44 @@ var switcherBtn = document.getElementById('btn'),
     options.classList.add('options-disabled');
   }
 
+  // Initialize sounds button
+  sounds ? soundsBtn.classList.remove('disabled') : soundsBtn.classList.add('disabled');
 
-  if (!sounds) {
-    soundsBtn.classList.add('disabled');
-  } else {
-    soundsBtn.classList.remove('disabled');
-  }
 
+  // Show period times
   sessionInput.value = utils.ms2min(sessionPeriod);
   idleInput.value = utils.ms2min(idlePeriod);
-
 })();
 
-switcherBtn.addEventListener('click', function (e) {
-  if (this.classList.contains('app-btn-active')) {
 
+/**
+ * Interface interaction handlers
+ */
+
+
+switcherBtn.addEventListener('click', function (e) {
+
+  // Switch off the app
+  if (this.classList.contains('app-btn-active')) {
     this.classList.remove("app-btn-active");
     options.classList.add('options-disabled');
-    router.send('setStateOff', null, function () {
-    });
-
+    router.send('setStateOff');
   } else {
     this.classList.add("app-btn-active");
     options.classList.remove('options-disabled');
-    router.send('setStateOn', null, function () {
-    });
+    router.send('setStateOn');
   }
-
 });
 
-
 sessionRestartBtn.addEventListener('click', function () {
+
+  // Clear session time output
   timer.clearSession();
   router.send('restartSession', null, function (response) {
   });
 });
 
+// Show sessionInputBtn when user changed value
 sessionInput.addEventListener('input', function (e) {
   sessionInputBtn.classList.remove('btn-hidden');
 });
@@ -102,7 +104,7 @@ sessionInputBtn.addEventListener('click', function () {
 
 });
 
-
+// Show idleInputBtn when user changed value
 idleInput.addEventListener('input', function (e) {
   idleInputBtn.classList.remove('btn-hidden');
 });
@@ -132,24 +134,27 @@ idleInputBtn.addEventListener('click', function () {
 
 });
 
-
 soundsBtn.addEventListener('click', function (e) {
   var value = +window.localStorage.getItem('volume');
+
   if (!value) {
-    router.send('unmute');
     this.classList.remove('disabled');
+    router.send('unmute');
   } else {
-    router.send('mute');
     this.classList.add('disabled');
+    router.send('mute');
   }
-
-
 });
 
+// Disable selection
 options.addEventListener('selectstart', function (e) {
   e.preventDefault();
 });
 
+
+/**
+ * Listening to background script messages
+ */
 
 router
   .on('sessionStarted', function () {
@@ -157,33 +162,26 @@ router
     timer.clearSession();
     timer.showSession();
   })
-
   .on('sessionEnded', function () {
     timer.clearSession();
   })
-
   .on('idleStarted', function () {
     timer.clearSession();
     timer.clearIdle();
     timer.showIdle();
   })
-
   .on('idleEnded', function () {
     timer.clearIdle();
   })
-
   .on('idle', function () {
     afkIndicator.classList.add('shown');
   })
-
   .on('active', function () {
     afkIndicator.classList.remove('shown');
   })
-
   .on('afk', function (message) {
     timer.showIdle(message.value);
   })
-
   .on('notAfk', function () {
     timer.clearIdle();
   });
