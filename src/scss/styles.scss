@@ -1,8 +1,13 @@
-//settings
-@import "settings/utilities";
+// Core variables
 @import "settings/variables";
+@import "settings/utilities";
 
+// Reset
+@import "normalize";
+
+// Core css
 @import "base";
+
 @import "header";
 @import "options";
 @import "periods";
