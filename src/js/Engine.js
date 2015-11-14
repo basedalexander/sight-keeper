@@ -134,6 +134,7 @@ extend(Engine.prototype, {
       // Session period ended, can start idle period.
       if (!sessionRunning && !idleRunning) {
         self.startIdle();
+        notify.closeSessionEnded();
       }
 
       // Notify popup that user is afk
