@@ -1,7 +1,19 @@
 // Options
 .options {
+  position: relative;
+  z-index: 100;
   width: 100%;
-  padding: 5px;
+  margin-bottom: 10px;
+  opacity: 1;
+  -webkit-transition: opacity .25s ease-in;
+  -moz-transition: opacity .25s ease-in;
+  -ms-transition: opacity .25s ease-in;
+  -o-transition: opacity .25s ease-in;
+  transition: opacity .25s ease-in;
+  
+  &.hidden {
+    opacity: 0;
+  }
 }
 
 .option {
