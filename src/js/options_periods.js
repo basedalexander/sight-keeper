@@ -2,16 +2,13 @@ var sessionTimer = document.getElementById('session-timer'),
   idleTimer = document.getElementById('idle-timer'),
   sessionIntervalId,
   idleIntervalId,
-  diff,
-  mins,
-  secs,
   storage = window.localStorage;
 
 // Shows current session time
 function showSession() {
   var value = +storage.getItem('session.startDate');
 
-  // Do nothing if session period isn't running
+  // Session isn't running, do nothing.
   if (!value) {
     return;
   }
@@ -35,10 +32,8 @@ function restartSession() {
 
 // Shows current idle time
 function showIdle(value) {
-
   var startDate = value || Date.now();
   idleTimer.innerHTML = formatDate(startDate);
-
   idleIntervalId = setInterval(function () {
     idleTimer.innerHTML = formatDate(startDate);
   }, 1000);
@@ -51,17 +46,19 @@ function clearIdle() {
 }
 
 function formatDate(time) {
+  var diff, mins, secs;
+
   diff = new Date(Date.now() - time);
 
   mins = diff.getMinutes();
   if (mins < 10) {
     mins = '0' + mins;
   }
+
   secs = diff.getSeconds();
   if (secs < 10) {
     secs = '0' + secs;
   }
-
   return mins + ':' + secs;
 }
 
