@@ -45,6 +45,7 @@ var sessionOpts = {
  */
 
 exports.sessionEnded = sessionEnded;
+exports.closeSessionEnded = closeSessionEnded;
 exports.idleEnded = idleEnded;
 exports.closeIdleEnded = closeIdleEnded;
 exports.idleInterrupted = idleInterrupted;
@@ -62,6 +63,10 @@ function sessionEnded() {
       });
     }, 23000);
   });
+}
+
+function closeSessionEnded () {
+  chrome.notifications.clear('sessionEnd', function () {});
 }
 
 function idleEnded() {
