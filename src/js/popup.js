@@ -2,7 +2,8 @@
 
 //TODO what a mess, break up code into modules
 
-var switcherBtn = document.getElementById('btn'),
+var wrapper = document.getElementById('wrapper'),
+  switcherBtn = document.getElementById('btn'),
   options = document.getElementById('options'),
 
   sessionInput = document.getElementById('session-input'),
@@ -14,6 +15,9 @@ var switcherBtn = document.getElementById('btn'),
   afkIndicator = document.getElementById('afk'),
 
   soundsBtn = document.getElementById('sounds-btn'),
+
+  infoBlock = document.getElementById('info'),
+  infoBtn = document.getElementById('info-btn'),
 
 // Init modules
   router = require('./Router')('frontend'),
@@ -147,9 +151,19 @@ soundsBtn.addEventListener('click', function (e) {
 });
 
 // Disable selection
-options.addEventListener('selectstart', function (e) {
+document.body.addEventListener('selectstart', function (e) {
   e.preventDefault();
 });
+
+infoBtn.addEventListener('click', function (e) {
+  infoBlock.classList.toggle('active');
+  this.classList.toggle('active');
+  options.classList.toggle('hidden');
+});
+
+// Listen button clicks
+infoBlock.addEventListener('click', linkHandler);
+
 
 
 /**
@@ -186,3 +200,22 @@ router
     timer.clearIdle();
   });
 
+
+/** Used by info buttons **/
+
+// Click event delegation, because of 
+function linkHandler (e) {
+  var target = e.target;
+  while (target.tagName !== 'DIV') {
+    if(target.tagName === 'A') {
+      var url = target.href;
+      openLink(url);
+      break;
+    }
+    target = target.parentNode;
+  }
+}
+
+function openLink (url) {
+  chrome.tabs.create({ url: url, active: true });
+}
