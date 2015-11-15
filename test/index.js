@@ -154,22 +154,6 @@ describe("Router module", function () {
     removeListener.restore();
   });
 
-  describe('checking communication between two routers', function () {
-    var router = new Router('backend');
-    var router2 = new Router('frontend');
-    var obj = {
-      handler: function () {}
-    };
-
-    // TODO find out how to test that in sinon
-    it.skip('should call handler on appropriate message', function () {
-      router.on('thing', obj.handler);
-      expect(router._listeners.thing).to.be.a('function');
-      var spy = sinon.spy(router._listeners, 'thing');
-      router2.send('thing');
-      expect(spy.called).ok;
-    });
-  });
 });
 
 describe('state module', function () {
@@ -213,17 +197,9 @@ describe("notify module", function () {
     expect(create.args[0][2]).to.be.a('function');
   });
 
-  it('.idleEnded', function () {
-    notify.idleInterrupted();
-    expect(create.calledTwice).ok;
-    expect(create.args[1][0]).to.be.a('string');
-    expect(create.args[1][1]).to.be.an('object');
-    expect(create.args[1][2]).to.be.a('function');
-  });
-
   it('.closeAll', function () {
     notify.closeAll();
-    expect(clear.calledThrice).ok;
+    expect(clear.calledOnce).ok;
   });
 });
 
