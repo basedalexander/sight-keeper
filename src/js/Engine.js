@@ -43,6 +43,7 @@ function Engine() {
       self._state.setOn();
       self.switchOn();
     })
+
     .on('setStateOff', function () {
       self._state.setOff();
       self.switchOff();
@@ -153,7 +154,7 @@ extend(Engine.prototype, {
       // User don't want rest.
       if (idleRunning) {
         self.endIdle();
-        notify.idleInterrupted();
+        notify.sessionEnded();
         audio.play(1);
       }
 
@@ -205,13 +206,6 @@ extend(Engine.prototype, {
         self.startSession(5 * 60000);
       }
     }
-
-    if (id === 'idleInterrupted') {
-      if (buttonIndex === 0) {
-        self.endIdle();
-        self.startSession();
-      }
-    }
   },
 
   addNotifyBtnListener: function addBtnListener() {
@@ -224,13 +218,22 @@ extend(Engine.prototype, {
     console.log('btn listener removed');
   },
 
-  startSession: function startSession(time) {
+
+  /**
+   * Period control methods
+   */
+
+  startSession: function startSession (time) {
     var t = time || +this._session.getPeriod();
     this._session.setStatus('running');
     this._session.setStartDate(Date.now());
 
-    // Tell popup that session is started.
-    router.send('sessionStarted');
+    // Was run with custom time
+    if (time) {
+      router.send('sessionStartedCustom', t);
+    } else {
+      router.send('sessionStarted');
+    }
 
     this._session.timeoutId = setTimeout(function () {
 

@@ -23,7 +23,7 @@ var wrapper = document.getElementById('wrapper'),
   router = require('./Router')('frontend'),
   utils = require('./utils'),
   audio = require('./audio'),
-  timer = require('./options_periods');
+  timer = require('./popup_timer');
 
 
 (function init() {
@@ -43,7 +43,6 @@ var wrapper = document.getElementById('wrapper'),
 
   // Initialize sounds button
   sounds ? soundsBtn.classList.remove('disabled') : soundsBtn.classList.add('disabled');
-
 
   // Show period times
   sessionInput.value = utils.ms2min(sessionPeriod);
@@ -104,8 +103,8 @@ sessionInputBtn.addEventListener('click', function () {
   this.classList.add('btn-hidden');
 
   router.send('setSessionPeriod', value, function () {
+    timer.updateSession();
   });
-
 });
 
 // Show idleInputBtn when user changed value
@@ -134,6 +133,7 @@ idleInputBtn.addEventListener('click', function () {
   this.classList.add('btn-hidden');
 
   router.send('setIdlePeriod', value, function () {
+    timer.updateIdle();
   });
 
 });
@@ -155,15 +155,16 @@ document.body.addEventListener('selectstart', function (e) {
   e.preventDefault();
 });
 
+// Toggle information
 infoBtn.addEventListener('click', function (e) {
   infoBlock.classList.toggle('active');
   this.classList.toggle('active');
   options.classList.toggle('hidden');
 });
 
-// Listen button clicks
+// Listen button clicks,
+// because anchor tags doesn't work by default in popup
 infoBlock.addEventListener('click', linkHandler);
-
 
 
 /**
@@ -175,6 +176,11 @@ router
     timer.clearIdle();
     timer.clearSession();
     timer.showSession();
+  })
+  .on('sessionStartedCustom', function (message) {
+    timer.clearIdle();
+    timer.clearSession();
+    timer.showSession(message.value);
   })
   .on('sessionEnded', function () {
     timer.clearSession();
@@ -203,11 +209,11 @@ router
 
 /** Used by info buttons **/
 
-// Click event delegation, because of 
-function linkHandler (e) {
+// Link event delegation
+function linkHandler(e) {
   var target = e.target;
   while (target.tagName !== 'DIV') {
-    if(target.tagName === 'A') {
+    if (target.tagName === 'A') {
       var url = target.href;
       openLink(url);
       break;
@@ -216,6 +222,6 @@ function linkHandler (e) {
   }
 }
 
-function openLink (url) {
-  chrome.tabs.create({ url: url, active: true });
+function openLink(url) {
+  chrome.tabs.create({url: url, active: true});
 }

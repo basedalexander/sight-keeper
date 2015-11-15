@@ -3,13 +3,16 @@
 
 .period-input {
   display: inline-block;
-  width: 50px;
+  width: 45px;
+  border-radius: 9px;
+  border-style: double;
+  border-color: $bg-3;
+  border-width: 1px;
   text-align: center;
 }
 .period-input:focus {
   background: rgba(255, 247, 0, 0.14);
-  border-style: solid;
-  border-color: #ccc;
+  outline: none;
 }
 
 .period-name {
@@ -25,6 +28,8 @@
   height: 35px;
   width: 25px;
   background-color: transparent;
+  font-size: 1rem;
+  color: #6A6E71;
 }
 
 .period-restart-btn:focus {
@@ -59,7 +64,7 @@
   float: right;
   width: 25px;
   color: rgba(0, 0, 0, .3);
-  cursor: default;
+  cursor: help;
 }
 
 .afk-state {
