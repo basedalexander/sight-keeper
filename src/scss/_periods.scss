@@ -29,7 +29,11 @@
   width: 25px;
   background-color: transparent;
   font-size: 1rem;
-  color: #6A6E71;
+  color: darken($bg-1, 10%);
+
+  &:hover {
+    transform: scale(1.05, 1.05);
+  }
 }
 
 .period-restart-btn:focus {
