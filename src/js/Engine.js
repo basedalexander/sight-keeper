@@ -1,5 +1,5 @@
 'use strict';
-//TODO close notification when user goes afk
+
 /**
  * Module dependencies
  */
@@ -186,7 +186,6 @@ extend(Engine.prototype, {
    * @param id {string} notification id
    * @param buttonIndex {number}
    * @link https://developer.chrome.com/apps/notifications#event-onButtonClicked
-   * TODO: refactor
    */
 
   notifyBtnListener: function notifyBtnListener(id, buttonIndex) {
@@ -202,8 +201,8 @@ extend(Engine.prototype, {
         self.startSession();
       } else {
 
-        // Pressed second button, remind again in 5 minutes
-        self.startSession(5 * 60000);
+        // User wants to remind him later
+        self.startSession(+self._session.getRemindTime());
       }
     }
   },
@@ -223,15 +222,18 @@ extend(Engine.prototype, {
    * Period control methods
    */
 
-  startSession: function startSession (time) {
-    var t = time || +this._session.getPeriod();
+  // TODO consider move reminder in a separate function
+  startSession: function startSession (remindTime) {
+    var t = remindTime || +this._session.getPeriod();
     this._session.setStatus('running');
     this._session.setStartDate(Date.now());
 
-    // Was run with custom time
-    if (time) {
-      router.send('sessionStartedCustom', t);
+    // This is reminder
+    if (remindTime) {
+      this._session.setRemindStatus(1);
+      router.send('sessionStartedCustom', remindTime);
     } else {
+      this._session.setRemindStatus(0);
       router.send('sessionStarted');
     }
 
@@ -247,6 +249,9 @@ extend(Engine.prototype, {
         audio.play(1);
       }
       self.endSession();
+
+      // For the case
+      self.session.setRemindStatus('0');
     }, t);
 
     console.log('session started');

@@ -2,6 +2,16 @@
 
 console.info('Notify module');
 
+/**
+ * Module exprots
+ */
+
+exports.sessionEnded = sessionEnded;
+exports.closeSessionEnded = closeSessionEnded;
+exports.idleEnded = idleEnded;
+exports.closeIdleEnded = closeIdleEnded;
+exports.closeAll = closeAll;
+
 
 var sessionEndOpts = {
     type: 'basic',
@@ -27,16 +37,6 @@ var sessionEndOpts = {
 
 // Stores Notification instance
   notifyIdleEnded;
-
-/**
- * Module exprots
- */
-
-exports.sessionEnded = sessionEnded;
-exports.closeSessionEnded = closeSessionEnded;
-exports.idleEnded = idleEnded;
-exports.closeIdleEnded = closeIdleEnded;
-exports.closeAll = closeAll;
 
 
 function sessionEnded() {

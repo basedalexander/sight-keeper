@@ -1,5 +1,10 @@
 'use strict';
 
+/**
+ * Module responsible for sending and receiving messages
+ * between extension's scripts.
+ */
+
 console.info('Router module');
 
 /**
@@ -15,9 +20,9 @@ function Router(identifier) {
     return new Router(identifier);
   }
 
+  var self = this;
   this._id = identifier;
   this._listeners = {};
-  var self = this;
 
   this.send = function (name, value, cb) {
 

@@ -14,6 +14,7 @@ var Static = require('./Static');
 
 module.exports = Period;
 
+
 function Period(name, time) {
   _classCallCheck(this, Period);
   this._status = new Static(name + '.status', 'stopped');
@@ -22,6 +23,12 @@ function Period(name, time) {
   this._status.reset();
   this._startDate.reset();
   this.timeoutId = null;
+
+  // Special attribute for 'session' period
+  if (name === 'session') {
+    this._remindTime = new Static(name + '.remindTime', '300000');
+    this._remindStatus = new Static(name + '.remindStatus', '0');
+  }
 }
 
 extend(Period.prototype, {
@@ -54,6 +61,20 @@ extend(Period.prototype, {
   },
   resetStartDate: function resetStartDate() {
     this._startDate.reset();
+  },
+
+  // Reminder specific methods
+  getRemindTime: function () {
+    return this._remindTime.load();
+  },
+  setRemindTime: function (value) {
+    this._remindTime.save(value);
+  },
+  getRemindStatus: function () {
+    return this._remindStatus.load();
+  },
+  setRemindStatus: function (value) {
+    this._remindStatus.save(value);
   }
 });
 

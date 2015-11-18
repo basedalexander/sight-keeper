@@ -1,41 +1,44 @@
 'use strict';
 
-//TODO what a mess, break up code into modules
+var wrapper         = document.getElementById('wrapper'),
+  switcherBtn       = document.getElementById('btn'),
+  options           = document.getElementById('options'),
 
-var wrapper = document.getElementById('wrapper'),
-  switcherBtn = document.getElementById('btn'),
-  options = document.getElementById('options'),
-
-  sessionInput = document.getElementById('session-input'),
-  sessionInputBtn = document.getElementById('session-apply-btn'),
+  sessionInput      = document.getElementById('session-input'),
+  sessionInputBtn   = document.getElementById('session-apply-btn'),
   sessionRestartBtn = document.getElementById('session-restart'),
 
-  idleInput = document.getElementById('idle-input'),
-  idleInputBtn = document.getElementById('idle-apply-btn'),
-  afkIndicator = document.getElementById('afk'),
+  idleInput         = document.getElementById('idle-input'),
+  idleInputBtn      = document.getElementById('idle-apply-btn'),
+  afkIndicator      = document.getElementById('afk'),
 
-  soundsBtn = document.getElementById('sounds-btn'),
+  soundsBtn         = document.getElementById('sounds-btn'),
 
-  infoBlock = document.getElementById('info'),
-  infoBtn = document.getElementById('info-btn'),
+  infoBlock         = document.getElementById('info'),
+  infoBtn           = document.getElementById('info-btn');
 
-// Init modules
-  router = require('./Router')('frontend'),
-  utils = require('./utils'),
-  audio = require('./audio'),
-  timer = require('./popup_timer');
+
+  // Init modules
+  var router  = require('./Router')('frontend'),
+      utils   = require('./utils'),
+      audio   = require('./audio'),
+      timer   = require('./popup_timer');
 
 
 (function init() {
-  var state = window.localStorage.getItem('state'),
-    sessionPeriod = window.localStorage.getItem('session.period'),
-    idlePeriod = window.localStorage.getItem('idle.period'),
-    sounds = +window.localStorage.getItem('volume');
+  var state         = window.localStorage.getItem('state'),
+    sessionPeriod   = window.localStorage.getItem('session.period'),
+    idlePeriod      = window.localStorage.getItem('idle.period'),
+    sounds          = +window.localStorage.getItem('volume'),
+    remindStatus    = +window.localStorage.getItem('session.remindStatus'),
+    remindTime      = +window.localStorage.getItem('session.remindTime');
 
   // App is on
   if (state === 'on') {
     switcherBtn.classList.add('app-btn-active');
-    timer.showSession();
+
+    // Is reminder running ?
+    remindStatus ? timer.showSession(remindTime) : timer.showSession();
   } else {
     switcherBtn.classList.remove('app-btn-active');
     options.classList.add('options-disabled');
