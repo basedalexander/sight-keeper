@@ -19,6 +19,10 @@
   &.active {
     z-index: 888;
     opacity: 1;
+    
+    .link-list a:hover {
+      cursor: pointer;
+    }
   }
 }
 
@@ -35,6 +39,7 @@
     display: block;
     color: $bg-1;
     font-size: 3rem;
+    cursor: default;
     transition: transform .05s;
     
     &:hover {
@@ -42,6 +47,7 @@
     }
   }
 }
+
 
 .info-btn-wrapper {
   overflow: hidden;

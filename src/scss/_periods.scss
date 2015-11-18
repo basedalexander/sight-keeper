@@ -4,6 +4,7 @@
 .period-input {
   display: inline-block;
   width: 45px;
+	padding: 3px 0;
   border-radius: 9px;
   border-style: double;
   border-color: $bg-3;
@@ -59,8 +60,9 @@
 }
 
 .timer {
-  width: 40px;
   float: right;
+  padding-right: 9px;
+  text-align: right;
   cursor: default;
 }
 
@@ -71,13 +73,20 @@
   cursor: help;
 }
 
-.afk-state {
+.afk-state,
+.remind-state {
   float: right;
   margin: 0 20px;
+  color: $bg-3;
   font-weight: bold;
   visibility: hidden;
+
+  &.shown {
+    visibility: visible;
+  }
 }
 
-.afk-state.shown {
-  visibility: visible;
+.remind-state {
+  font-size: 1.4rem;
+  cursor: help;
 }
