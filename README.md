@@ -1,7 +1,7 @@
 # Sight-keeper - is a chrome extension whose purpose is to save your sight.
 Version :
 ```bash
-v1.0.09
+v1.1.0
 ```
 
 ![alt text](http://i.imgur.com/LKZfdHU.jpg "Screenshot")
