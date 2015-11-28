@@ -21,6 +21,7 @@ body {
   font-family: 'Helvetica', sans-serif;
   font-size: $base-font-size;
   position: relative;
+  -webkit-font-smoothing: antialiased;
 }
 
 button {

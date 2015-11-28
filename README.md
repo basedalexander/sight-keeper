@@ -4,7 +4,7 @@ Version :
 v1.0.09
 ```
 
-![alt text](http://i.imgur.com/LKZfdHU.jpg "Screenshot")
+![alt text](https://raw.githubusercontent.com/thohoh/sight-keeper/master/src/img/snapshots/popup.jpg "Screenshot")
 
 ![alt text](http://i.imgur.com/jW2a3Kj.png?1 "Screenshot")
 
